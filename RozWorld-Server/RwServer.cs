@@ -1,37 +1,69 @@
-﻿using Oddmatics.RozWorld.API.Server;
+﻿using Oddmatics.RozWorld.API.Generic.Game;
+using Oddmatics.RozWorld.API.Server;
+using Oddmatics.RozWorld.API.Server.Accounts;
 using Oddmatics.RozWorld.API.Server.Entity;
 using Oddmatics.RozWorld.API.Server.Event;
+using Oddmatics.RozWorld.Server.Accounts;
 using Oddmatics.RozWorld.Server.Entity;
+using Oddmatics.Util.IO;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Reflection;
-using System.Diagnostics;
-using Oddmatics.Util.IO;
 
 namespace Oddmatics.RozWorld.Server
 {
     public class RwServer : IRwServer
     {
-        // Constants
+        #region Path Constants
+
+        /// <summary>
+        /// The root directory this library is active in.
+        /// </summary>
         public static string DIRECTORY_CURRENT = Directory.GetCurrentDirectory();
+        
+        /// <summary>
+        /// The plugins directory.
+        /// </summary>
         public static string DIRECTORY_PLUGINS = DIRECTORY_CURRENT + @"\plugins";
+
+        /// <summary>
+        /// The level/worlds directory.
+        /// </summary>
         public static string DIRECTORY_LEVEL = DIRECTORY_CURRENT + @"\level";
+
+        /// <summary>
+        /// The accounts directory.
+        /// </summary>
         public static string DIRECTORY_ACCOUNTS = DIRECTORY_CURRENT + @"\accounts";
+
+        /// <summary>
+        /// The config file for server variables.
+        /// </summary>
         public static string FILE_CONFIG = "server.cfg";
 
+        #endregion
+
         public string BrowserName { get; private set; }
+        public Difficulty GameDifficulty { get; set; }
+        public GameMode GameMode { get; private set; }
         public ushort HostingPort { get; private set; }
         public bool IsLocal { get; private set; }
+        public bool IsWhitelisted { get; private set; }
         private ILogger _Logger;
         public ILogger Logger { get { return _Logger; } set { _Logger = _Logger == null ? value : _Logger; } }
         public short MaxPlayers { get; private set; }
         public IList<IPlayer> OnlinePlayers { get { return null; } }
+        public IPermissionAuthority PermissionAuthority { get; private set; }
         public List<IPlugin> _Plugins;
         public IList<IPlugin> Plugins { get { return _Plugins.AsReadOnly(); } }
         public string RozWorldVersion { get { return "0.01"; } }
         public string ServerName { get { return "Vanilla RozWorld Server"; } }
         public string ServerVersion { get { return "0.01"; } }
+        public string SpawnWorldName { get; private set; }
+        private string SpawnWorldGenerator = String.Empty;
+        private string SpawnWorldGeneratorOptions = String.Empty;
         public byte TickRate { get; private set; }
         public IList<string> WhitelistedPlayers { get { return null; } }
 
@@ -44,17 +76,97 @@ namespace Oddmatics.RozWorld.Server
         private bool Started = false;
 
         
+        /// <summary>
+        /// Sends a message to all players connected to this RwServer.
+        /// </summary>
+        /// <param name="message">The message to send.</param>
         public void BroadcastMessage(string message)
         {
             if (Started)
             {
-                Logger.Out("<SERVER> " + message);
+                Logger.Out("[CHAT] " + message);
 
                 foreach (Player player in OnlinePlayers)
                 {
                     player.SendMessage(message);
                 }
             }
+        }
+
+        private void LoadConfigs(string configFile)
+        {
+            var configs = FileSystem.ReadINIToDictionary(configFile);
+
+            foreach (var item in configs)
+            {
+                switch (item.Key.ToLower())
+                {
+                        // Server specific options
+                    case "browser-name":
+                        BrowserName = item.Value;
+                        break;
+
+                    case "host-port":
+                        HostingPort = StringConversion.ToUShort(item.Value, true, HostingPort); 
+                        break;
+
+                    case "max-players":
+                        MaxPlayers = StringConversion.ToShort(item.Value, true, MaxPlayers);
+                        break;
+
+                    case "tick-rate":
+                        TickRate = StringConversion.ToByte(item.Value, true, TickRate);
+                        break;
+
+                    case "whitelist":
+                        IsWhitelisted = StringConversion.ToBool(item.Value, true, IsWhitelisted);
+                        break;
+
+                        // World generation options
+                    case "generator":
+                        SpawnWorldGenerator = item.Value;
+                        break;
+
+                    case "generator-options":
+                        SpawnWorldGeneratorOptions = item.Value;
+                        break;
+
+                        // Game settings
+                    case "game-mode":
+                        switch(item.Value.ToLower())
+                        {
+                            case "adventure": GameMode = GameMode.Adventure; break;
+                            case "books": 
+                            default:
+                                GameMode = GameMode.Books; break;
+                        }
+                        break;
+
+                    case "difficulty":
+                        GameDifficulty = (Difficulty)StringConversion.ToByte(item.Value, true, (byte)GameDifficulty);
+                        break;
+
+                        // Player settings
+                    case "default-group":
+                        PermissionAuthority.DefaultGroupName = item.Value;
+                        break;
+
+                    case "enable-clans":
+                        // TODO: put in clan manager
+                        break;
+
+                    case "max-clan-members":
+                        // TODO: as above
+                        break;
+
+                    default: continue;
+                }
+            }
+        }
+
+        private void MakeDefaultConfigs(string targetFile)
+        {
+            FileSystem.PutTextFile(targetFile, new string[] { Properties.Resources.DefaultConfigs });
         }
 
         public bool RegisterCommand(string cmd, CommandSentCallback func)
@@ -81,17 +193,24 @@ namespace Oddmatics.RozWorld.Server
             if (Logger != null)
             {
                 Logger.Out("RozWorld server starting...");
-                Logger.Out("Checking directories...");
+                Logger.Out("Initialising directories...");
 
                 FileSystem.MakeDirectory(DIRECTORY_ACCOUNTS);
                 FileSystem.MakeDirectory(DIRECTORY_LEVEL);
                 FileSystem.MakeDirectory(DIRECTORY_PLUGINS);
 
+                Logger.Out("Initialising systems...");
+
+                PermissionAuthority = new PermissionAuthority();
+
                 Logger.Out("Setting configs...");
 
-                var configFile = FileSystem.ReadINIToDictionary(DIRECTORY_CURRENT + "\\" + FILE_CONFIG);
+                string configPath = DIRECTORY_CURRENT + "\\" + FILE_CONFIG;
 
+                if (!File.Exists(configPath))
+                    MakeDefaultConfigs(configPath);
 
+                LoadConfigs(configPath);
 
                 Logger.Out("Loading plugins...");
 
