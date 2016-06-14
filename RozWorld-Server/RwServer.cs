@@ -73,6 +73,7 @@ namespace Oddmatics.RozWorld.Server
 
 
         private Dictionary<string, CommandSentCallback> Commands;
+        private string CurrentPluginLoading = String.Empty;
         private bool Started = false;
 
         
@@ -159,7 +160,7 @@ namespace Oddmatics.RozWorld.Server
                         // TODO: as above
                         break;
 
-                    default: continue;
+                    default: Logger.Out("Unknown var: \"" + item.Key + "\"."); continue;
                 }
             }
         }
@@ -217,7 +218,6 @@ namespace Oddmatics.RozWorld.Server
                 _Plugins = new List<IPlugin>();
                 Commands = new Dictionary<string, CommandSentCallback>();
 
-
                 // Load plugins here
                 var pluginClasses = new List<Type>();
 
@@ -250,6 +250,7 @@ namespace Oddmatics.RozWorld.Server
 
                 foreach (var plugin in pluginClasses)
                 {
+                    CurrentPluginLoading = plugin.Name;
                     _Plugins.Add((IPlugin)Activator.CreateInstance(plugin));
                 }
 
@@ -259,12 +260,14 @@ namespace Oddmatics.RozWorld.Server
                 // Done loading plugins
 
                 Logger.Out("Finished loading plugins!");
-                
+
                 Logger.Out("Server done loading!");
                 Logger.Out("Hello! This is " + ServerName + " (version " + ServerVersion + ").");
 
                 Started = true;
             }
+            else
+                throw new InvalidOperationException("An ILogger instance must be attached before calling Start().");
         }
 
         public void Stop()
