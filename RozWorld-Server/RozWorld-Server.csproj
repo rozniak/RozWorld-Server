@@ -47,6 +47,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Accounts\PermissionAuthority.cs" />
+    <Compile Include="Accounts\PermissionGroup.cs" />
     <Compile Include="Entity\Entity.cs" />
     <Compile Include="Entity\Player.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

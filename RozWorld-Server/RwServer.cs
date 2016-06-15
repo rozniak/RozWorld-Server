@@ -81,7 +81,7 @@ namespace Oddmatics.RozWorld.Server
 
         private Dictionary<string, CommandSentCallback> Commands;
         public string CurrentPluginLoading { get; private set; }
-        private bool Started = false;
+        public bool Started { get; private set; }
 
         
         /// <summary>

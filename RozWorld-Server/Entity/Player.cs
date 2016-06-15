@@ -26,7 +26,7 @@ namespace Oddmatics.RozWorld.Server.Entity
 
         public void Ban(string reason = "") { }
         public void BanIP(string reason = "") { }
-        public bool HasPermission(string key) { return false; } // for the sake of building
+        public bool HasPermission(string key) { return Account.HasPermission(key); }
         public void Kick(string reason = "") { }
         public void PrivateMessage(string message, IPlayer sender) { }
         public void SendInvite(IPlayer sender) { }
