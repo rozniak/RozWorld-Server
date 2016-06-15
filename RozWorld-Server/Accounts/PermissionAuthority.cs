@@ -1,60 +1,53 @@
 ﻿using Oddmatics.RozWorld.API.Server.Accounts;
+using Oddmatics.RozWorld.API.Generic;
+using System;
+using System.Collections.Generic;
 
 namespace Oddmatics.RozWorld.Server.Accounts
 {
     public class PermissionAuthority : IPermissionAuthority
     {
+        public string DefaultGroupName { get; set; }
+        public IList<string> GroupNames { get { return null; } }
+        public IList<string> RegisteredPermissions { get { return null; } }
+        private Dictionary<string, PermissionInfo> PermissionRegistry;
+        private Dictionary<string, IPermissionGroup> GroupRegistry;
 
-        public bool CheckPermissionByAccount(string name, string key)
+
+        public PermissionAuthority()
         {
-            throw new System.NotImplementedException();
+            PermissionRegistry = new Dictionary<string, PermissionInfo>();
         }
 
-        public bool CheckPermissionByAccount(IAccount account, string key)
-        {
-            throw new System.NotImplementedException();
-        }
 
         public IPermissionGroup CreateNewGroup(string name)
         {
-            throw new System.NotImplementedException();
+            // TODO: code this when IPermissionGroup is implemented
+            throw new NotImplementedException();
         }
-
-        public string DefaultGroupName { get; set; }
 
         public IPermissionGroup GetGroup(string name)
         {
-            throw new System.NotImplementedException();
+            return GroupRegistry[name];
         }
 
         public PermissionInfo GetPermissionInfo(string key)
         {
-            throw new System.NotImplementedException();
-        }
-
-        public System.Collections.Generic.IList<string> GroupNames
-        {
-            get { throw new System.NotImplementedException(); }
+            return PermissionRegistry[key];
         }
 
         public void RegisterPermission(string key, string description)
         {
-            throw new System.NotImplementedException();
-        }
+            string realKey = key.ToLower();
+            var server = (RwServer)RwCore.Server;
 
-        public System.Collections.Generic.IList<string> RegisteredPermissions
-        {
-            get { throw new System.NotImplementedException(); }
-        }
-
-        public void SetPermissionByAccount(string name, string key, bool status)
-        {
-            throw new System.NotImplementedException();
-        }
-
-        public void SetPermissionByAccount(IAccount account, string key, bool status)
-        {
-            throw new System.NotImplementedException();
+            if (!PermissionRegistry.ContainsKey(realKey))
+            {
+                var permInfo = new PermissionInfo(server.CurrentPluginLoading, description);
+                PermissionRegistry.Add(realKey, permInfo);
+            }
+            else
+                throw new ArgumentException("A permission with the same key already exists.");
         }
     }
 }

@@ -19,9 +19,19 @@ namespace Oddmatics.RozWorld.Server
         #region Path Constants
 
         /// <summary>
+        /// The accounts directory.
+        /// </summary>
+        public static string DIRECTORY_ACCOUNTS = DIRECTORY_CURRENT + @"\accounts";
+
+        /// <summary>
         /// The root directory this library is active in.
         /// </summary>
         public static string DIRECTORY_CURRENT = Directory.GetCurrentDirectory();
+
+        /// <summary>
+        /// The permissions directory.
+        /// </summary>
+        public static string DIRECTORY_PERMISSIONS = DIRECTORY_CURRENT + @"\permissions";
         
         /// <summary>
         /// The plugins directory.
@@ -33,10 +43,7 @@ namespace Oddmatics.RozWorld.Server
         /// </summary>
         public static string DIRECTORY_LEVEL = DIRECTORY_CURRENT + @"\level";
 
-        /// <summary>
-        /// The accounts directory.
-        /// </summary>
-        public static string DIRECTORY_ACCOUNTS = DIRECTORY_CURRENT + @"\accounts";
+        
 
         /// <summary>
         /// The config file for server variables.
@@ -73,7 +80,7 @@ namespace Oddmatics.RozWorld.Server
 
 
         private Dictionary<string, CommandSentCallback> Commands;
-        private string CurrentPluginLoading = String.Empty;
+        public string CurrentPluginLoading { get; private set; }
         private bool Started = false;
 
         
