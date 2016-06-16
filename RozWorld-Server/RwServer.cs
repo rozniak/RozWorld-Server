@@ -224,6 +224,11 @@ namespace Oddmatics.RozWorld.Server
 
                 return true;
             }
+            catch (KeyNotFoundException ex)
+            {
+                Logger.Out("[ERR] Unknown command.");
+                return false;
+            }
             catch (Exception ex)
             {
                 Logger.Out("[ERR] An internal error occurred whilst running the issued command: " +
@@ -246,6 +251,7 @@ namespace Oddmatics.RozWorld.Server
 
                 Logger.Out("[STAT] Initialising systems...");
 
+                Commands = new Dictionary<string, CommandSentCallback>();
                 StatCalculator = new StatCalculator();
                 ServerAccount = new Account("server"); // Create the server account (max privileges)
                 PermissionAuthority = new PermissionAuthority();
