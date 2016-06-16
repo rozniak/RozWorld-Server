@@ -214,9 +214,12 @@ namespace Oddmatics.RozWorld.Server
                 string[] cmdSplit = cmd.Split();
                 string realCmd = cmdSplit[0].ToLower();
 
-                for (int i = 1; i < cmdSplit.Length; i++)
+                if (cmdSplit.Length > 1)
                 {
-                    args.Add(cmdSplit[i]);
+                    for (int i = 1; i < cmdSplit.Length; i++)
+                    {
+                        args.Add(cmdSplit[i]);
+                    }
                 }
 
                 // Call the attached command delegate - commands are all lowercase
@@ -271,7 +274,6 @@ namespace Oddmatics.RozWorld.Server
                 Logger.Out("[STAT] Loading plugins...");
 
                 _Plugins = new List<IPlugin>();
-                Commands = new Dictionary<string, CommandSentCallback>();
 
                 // Load plugins here
                 var pluginClasses = new List<Type>();
