@@ -3,8 +3,10 @@ using Oddmatics.RozWorld.API.Server;
 using Oddmatics.RozWorld.API.Server.Accounts;
 using Oddmatics.RozWorld.API.Server.Entity;
 using Oddmatics.RozWorld.API.Server.Event;
+using Oddmatics.RozWorld.API.Server.Game;
 using Oddmatics.RozWorld.Server.Accounts;
 using Oddmatics.RozWorld.Server.Entity;
+using Oddmatics.RozWorld.Server.Game;
 using Oddmatics.Util.IO;
 using System;
 using System.Collections.Generic;
@@ -53,10 +55,12 @@ namespace Oddmatics.RozWorld.Server
         #endregion
 
         public string BrowserName { get; private set; }
+        public IContentManager ContentManager { get; private set; }
         public Difficulty GameDifficulty { get; set; }
         public GameMode GameMode { get; private set; }
         public ushort HostingPort { get; private set; }
         public bool IsLocal { get; private set; }
+        public bool IsPaused { get; private set; }
         public bool IsWhitelisted { get; private set; }
         private ILogger _Logger;
         public ILogger Logger { get { return _Logger; } set { _Logger = _Logger == null ? value : _Logger; } }
@@ -69,11 +73,12 @@ namespace Oddmatics.RozWorld.Server
         public string ServerName { get { return "Vanilla RozWorld Server"; } }
         public string ServerVersion { get { return "0.01"; } }
         public string SpawnWorldName { get; private set; }
-        private string SpawnWorldGenerator = String.Empty;
-        private string SpawnWorldGeneratorOptions = String.Empty;
+        public IStatCalculator StatCalculator { get; private set; }
         public byte TickRate { get; private set; }
-        public IList<string> WhitelistedPlayers { get { return null; } }
+        private List<string> _WhitelistedPlayers;
+        public IList<string> WhitelistedPlayers { get { return _WhitelistedPlayers.AsReadOnly(); } }
 
+        public event EventHandler Pause;
         public event EventHandler Starting;
         public event EventHandler Stopping;
         public event EventHandler Tick;
@@ -81,7 +86,11 @@ namespace Oddmatics.RozWorld.Server
 
         private Dictionary<string, CommandSentCallback> Commands;
         public string CurrentPluginLoading { get; private set; }
+        private Account ServerAccount;
+        private string SpawnWorldGenerator = String.Empty;
+        private string SpawnWorldGeneratorOptions = String.Empty;
         public bool Started { get; private set; }
+
 
         
         /// <summary>
@@ -195,23 +204,54 @@ namespace Oddmatics.RozWorld.Server
             // Restart here
         }
 
+        public bool SendCommand(Account sender, string cmd)
+        {
+            try
+            {
+                Logger.Out("[CMD] " + sender.Username + " issued command: " + cmd);
+
+                var args = new List<string>();
+                string[] cmdSplit = cmd.Split();
+                string realCmd = cmdSplit[0].ToLower();
+
+                for (int i = 1; i < cmdSplit.Length; i++)
+                {
+                    args.Add(cmdSplit[i]);
+                }
+
+                // Call the attached command delegate - commands are all lowercase
+                Commands[realCmd](sender, args.AsReadOnly());
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Logger.Out("[ERR] An internal error occurred whilst running the issued command: " +
+                    ex.Message + ";\n" + ex.StackTrace);
+                return false;
+            }
+        }
+
         public void Start()
         {
             // Start here - a logger is required
             if (Logger != null)
             {
-                Logger.Out("RozWorld server starting...");
-                Logger.Out("Initialising directories...");
+                Logger.Out("[STAT] RozWorld server starting...");
+                Logger.Out("[STAT] Initialising directories...");
 
                 FileSystem.MakeDirectory(DIRECTORY_ACCOUNTS);
                 FileSystem.MakeDirectory(DIRECTORY_LEVEL);
                 FileSystem.MakeDirectory(DIRECTORY_PLUGINS);
 
-                Logger.Out("Initialising systems...");
+                Logger.Out("[STAT] Initialising systems...");
 
+                StatCalculator = new StatCalculator();
+                ServerAccount = new Account("server"); // Create the server account (max privileges)
                 PermissionAuthority = new PermissionAuthority();
+                ContentManager = new ContentManager();
 
-                Logger.Out("Setting configs...");
+                Logger.Out("[STAT] Setting configs...");
 
                 string configPath = DIRECTORY_CURRENT + "\\" + FILE_CONFIG;
 
@@ -220,7 +260,7 @@ namespace Oddmatics.RozWorld.Server
 
                 LoadConfigs(configPath);
 
-                Logger.Out("Loading plugins...");
+                Logger.Out("[STAT] Loading plugins...");
 
                 _Plugins = new List<IPlugin>();
                 Commands = new Dictionary<string, CommandSentCallback>();
@@ -243,13 +283,13 @@ namespace Oddmatics.RozWorld.Server
                     }
                     catch (ReflectionTypeLoadException reflectionEx)
                     {
-                        Logger.Out("An error occurred trying to enumerate the types inside of the plugin \""
+                        Logger.Out("[ERR] An error occurred trying to enumerate the types inside of the plugin \""
                             + Path.GetFileName(file) + "\", this plugin cannot be loaded. It may have been built for" +
                             " a different version of the RozWorld API.");
                     }
                     catch (Exception ex)
                     {
-                        Logger.Out("An error occurred trying to load plugin \"" + Path.GetFileName(file) + "\", this " +
+                        Logger.Out("[ERR] An error occurred trying to load plugin \"" + Path.GetFileName(file) + "\", this " +
                             "plugin cannot be loaded. The exception that occurred reported the following:\n" +
                             ex.Message + "\nStack:\n" + ex.StackTrace);
                     }
@@ -266,10 +306,10 @@ namespace Oddmatics.RozWorld.Server
 
                 // Done loading plugins
 
-                Logger.Out("Finished loading plugins!");
+                Logger.Out("[STAT] Finished loading plugins!");
 
-                Logger.Out("Server done loading!");
-                Logger.Out("Hello! This is " + ServerName + " (version " + ServerVersion + ").");
+                Logger.Out("[STAT] Server done loading!");
+                Logger.Out("[STAT] Hello! This is " + ServerName + " (version " + ServerVersion + ").");
 
                 Started = true;
             }
