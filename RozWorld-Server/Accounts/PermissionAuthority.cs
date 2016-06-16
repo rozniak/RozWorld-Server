@@ -2,6 +2,7 @@
 using Oddmatics.RozWorld.API.Server.Accounts;
 using System;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 
 namespace Oddmatics.RozWorld.Server.Accounts
 {
@@ -50,6 +51,10 @@ namespace Oddmatics.RozWorld.Server.Accounts
         {
             string realKey = key.ToLower();
             var server = (RwServer)RwCore.Server;
+            var syntaxCheck = new Regex(@"^([a-z]+\.)+(([a-z]+)|\*)$");
+
+            if (!syntaxCheck.IsMatch(realKey))
+                throw new ArgumentException("Invalid format for permission key.");
 
             if (server.Started)
                 throw new InvalidOperationException("The server has already been started, permissions must be " +

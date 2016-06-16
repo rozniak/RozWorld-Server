@@ -49,6 +49,7 @@
     <Compile Include="Accounts\Account.cs" />
     <Compile Include="Accounts\PermissionAuthority.cs" />
     <Compile Include="Accounts\PermissionGroup.cs" />
+    <Compile Include="ServerCommands.cs" />
     <Compile Include="Entity\EntityFactory.cs" />
     <Compile Include="Entity\Player.cs" />
     <Compile Include="Entity\PlayerAttributes.cs" />

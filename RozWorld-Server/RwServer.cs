@@ -67,7 +67,7 @@ namespace Oddmatics.RozWorld.Server
         public short MaxPlayers { get; private set; }
         public IList<IPlayer> OnlinePlayers { get { return new List<IPlayer>().AsReadOnly(); } }
         public IPermissionAuthority PermissionAuthority { get; private set; }
-        public List<IPlugin> _Plugins;
+        private List<IPlugin> _Plugins;
         public IList<IPlugin> Plugins { get { return _Plugins.AsReadOnly(); } }
         public string RozWorldVersion { get { return "0.01"; } }
         public string ServerName { get { return "Vanilla RozWorld Server"; } }
@@ -86,7 +86,7 @@ namespace Oddmatics.RozWorld.Server
 
         private Dictionary<string, CommandSentCallback> Commands;
         public string CurrentPluginLoading { get; private set; }
-        private Account ServerAccount;
+        public Account ServerAccount { get; private set; }
         private string SpawnWorldGenerator = String.Empty;
         private string SpawnWorldGeneratorOptions = String.Empty;
         public bool Started { get; private set; }
@@ -250,6 +250,8 @@ namespace Oddmatics.RozWorld.Server
                 ServerAccount = new Account("server"); // Create the server account (max privileges)
                 PermissionAuthority = new PermissionAuthority();
                 ContentManager = new ContentManager();
+
+                ServerCommands.Register(); // Register commands and permissions for the server
 
                 Logger.Out("[STAT] Setting configs...");
 
