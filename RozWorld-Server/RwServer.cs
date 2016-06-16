@@ -65,7 +65,7 @@ namespace Oddmatics.RozWorld.Server
         private ILogger _Logger;
         public ILogger Logger { get { return _Logger; } set { _Logger = _Logger == null ? value : _Logger; } }
         public short MaxPlayers { get; private set; }
-        public IList<IPlayer> OnlinePlayers { get { return null; } }
+        public IList<IPlayer> OnlinePlayers { get { return new List<IPlayer>().AsReadOnly(); } }
         public IPermissionAuthority PermissionAuthority { get; private set; }
         public List<IPlugin> _Plugins;
         public IList<IPlugin> Plugins { get { return _Plugins.AsReadOnly(); } }
