@@ -1,5 +1,5 @@
 ﻿/**
- * Oddmatics.RozWorld.Server.Entity.Player -- RozWorld Player
+ * Oddmatics.RozWorld.Server.Entity.Player -- RozWorld Player Implementation
  *
  * This source-code is part of the server library for the RozWorld project by rozza of Oddmatics:
  * <<http://www.oddmatics.uk>>

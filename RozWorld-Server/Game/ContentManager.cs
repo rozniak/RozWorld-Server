@@ -1,4 +1,15 @@
-﻿using Oddmatics.RozWorld.API.Server.Entity;
+﻿/**
+ * Oddmatics.RozWorld.Server.Game.ContentManager -- RozWorld Server Content Manager Implementation
+ *
+ * This source-code is part of the server library for the RozWorld project by rozza of Oddmatics:
+ * <<http://www.oddmatics.uk>>
+ * <<http://roz.world>>
+ * <<http://github.com/rozniak/RozWorld-Server>>
+ *
+ * Sharing, editing and general licence term information can be found inside of the "LICENCE.MD" file that should be located in the root of this project's directory structure.
+ */
+
+using Oddmatics.RozWorld.API.Server.Entity;
 using Oddmatics.RozWorld.API.Server.Game;
 using Oddmatics.RozWorld.Server.Entity;
 using System;

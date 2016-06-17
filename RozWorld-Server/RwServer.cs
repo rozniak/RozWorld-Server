@@ -1,4 +1,15 @@
-﻿using Oddmatics.RozWorld.API.Generic.Game;
+﻿/**
+ * Oddmatics.RozWorld.Server.RwServer -- RozWorld Server Implementation
+ *
+ * This source-code is part of the server library for the RozWorld project by rozza of Oddmatics:
+ * <<http://www.oddmatics.uk>>
+ * <<http://roz.world>>
+ * <<http://github.com/rozniak/RozWorld-Server>>
+ *
+ * Sharing, editing and general licence term information can be found inside of the "LICENCE.MD" file that should be located in the root of this project's directory structure.
+ */
+
+using Oddmatics.RozWorld.API.Generic.Game;
 using Oddmatics.RozWorld.API.Server;
 using Oddmatics.RozWorld.API.Server.Accounts;
 using Oddmatics.RozWorld.API.Server.Entity;

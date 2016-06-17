@@ -1,4 +1,15 @@
-﻿using Oddmatics.RozWorld.API.Generic;
+﻿/**
+ * Oddmatics.RozWorld.Server.Accounts.Account -- RozWorld Server User Account Implementation
+ *
+ * This source-code is part of the server library for the RozWorld project by rozza of Oddmatics:
+ * <<http://www.oddmatics.uk>>
+ * <<http://roz.world>>
+ * <<http://github.com/rozniak/RozWorld-Server>>
+ *
+ * Sharing, editing and general licence term information can be found inside of the "LICENCE.MD" file that should be located in the root of this project's directory structure.
+ */
+
+using Oddmatics.RozWorld.API.Generic;
 using Oddmatics.RozWorld.API.Server.Accounts;
 using Oddmatics.RozWorld.API.Server.Entity;
 using Oddmatics.RozWorld.API.Server.Game;
