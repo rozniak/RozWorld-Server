@@ -21,14 +21,14 @@ namespace Oddmatics.RozWorld.Server
         #region Path Constants
 
         /// <summary>
-        /// The accounts directory.
-        /// </summary>
-        public static string DIRECTORY_ACCOUNTS = DIRECTORY_CURRENT + @"\accounts";
-
-        /// <summary>
         /// The root directory this library is active in.
         /// </summary>
         public static string DIRECTORY_CURRENT = Directory.GetCurrentDirectory();
+
+        /// <summary>
+        /// The accounts directory.
+        /// </summary>
+        public static string DIRECTORY_ACCOUNTS = DIRECTORY_CURRENT + @"\accounts";
 
         /// <summary>
         /// The permissions directory.
@@ -250,6 +250,7 @@ namespace Oddmatics.RozWorld.Server
 
                 FileSystem.MakeDirectory(DIRECTORY_ACCOUNTS);
                 FileSystem.MakeDirectory(DIRECTORY_LEVEL);
+                FileSystem.MakeDirectory(DIRECTORY_PERMISSIONS);
                 FileSystem.MakeDirectory(DIRECTORY_PLUGINS);
 
                 Logger.Out("[STAT] Initialising systems...");
