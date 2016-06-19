@@ -12,11 +12,12 @@
 using Oddmatics.RozWorld.API.Generic.Game;
 using Oddmatics.RozWorld.API.Server;
 using Oddmatics.RozWorld.API.Server.Accounts;
-using Oddmatics.RozWorld.API.Server.Entity;
+using Oddmatics.RozWorld.API.Server.Entities;
 using Oddmatics.RozWorld.API.Server.Event;
 using Oddmatics.RozWorld.API.Server.Game;
+using Oddmatics.RozWorld.API.Server.Level;
 using Oddmatics.RozWorld.Server.Accounts;
-using Oddmatics.RozWorld.Server.Entity;
+using Oddmatics.RozWorld.Server.Entities;
 using Oddmatics.RozWorld.Server.Game;
 using Oddmatics.Util.IO;
 using System;
@@ -76,7 +77,7 @@ namespace Oddmatics.RozWorld.Server
         private ILogger _Logger;
         public ILogger Logger { get { return _Logger; } set { _Logger = _Logger == null ? value : _Logger; } }
         public short MaxPlayers { get; private set; }
-        public IList<IPlayer> OnlinePlayers { get { return new List<IPlayer>().AsReadOnly(); } }
+        public IList<Player> OnlinePlayers { get { return new List<Player>().AsReadOnly(); } }
         public IPermissionAuthority PermissionAuthority { get; private set; }
         private List<IPlugin> _Plugins;
         public IList<IPlugin> Plugins { get { return _Plugins.AsReadOnly(); } }
@@ -90,27 +91,28 @@ namespace Oddmatics.RozWorld.Server
         public IList<string> WhitelistedPlayers { get { return _WhitelistedPlayers.AsReadOnly(); } }
 
         public event EventHandler Pause;
+        public event EventHandler Started;
         public event EventHandler Starting;
+        public event EventHandler Stopped;
         public event EventHandler Stopping;
         public event EventHandler Tick;
 
 
         private Dictionary<string, CommandSentCallback> Commands;
         public string CurrentPluginLoading { get; private set; }
-        public Account ServerAccount { get; private set; }
+        public RwAccount ServerAccount { get; private set; }
         private string SpawnWorldGenerator = String.Empty;
         private string SpawnWorldGeneratorOptions = String.Empty;
-        public bool Started { get; private set; }
+        public bool HasStarted { get; private set; }
 
 
-        
         /// <summary>
         /// Sends a message to all players connected to this RwServer.
         /// </summary>
         /// <param name="message">The message to send.</param>
         public void BroadcastMessage(string message)
         {
-            if (Started)
+            if (HasStarted)
             {
                 Logger.Out("[CHAT] " + message);
 
@@ -119,6 +121,26 @@ namespace Oddmatics.RozWorld.Server
                     player.SendMessage(message);
                 }
             }
+        }
+
+        public Player GetPlayer(string name)
+        {
+            return null; // TODO: code this
+        }
+
+        public Player GetPlayerAbsolute(string name)
+        {
+            return null; // TODO: code this
+        }
+
+        public IWorld GetWorld(string name)
+        {
+            return null; // TODO: code this
+        }
+
+        public bool IsValidEntity(ushort id)
+        {
+            return false; // TODO: code this
         }
 
         private void LoadConfigs(string configFile)
@@ -215,7 +237,7 @@ namespace Oddmatics.RozWorld.Server
             // Restart here
         }
 
-        public bool SendCommand(Account sender, string cmd)
+        public bool SendCommand(RwAccount sender, string cmd)
         {
             try
             {
@@ -267,10 +289,10 @@ namespace Oddmatics.RozWorld.Server
                 Logger.Out("[STAT] Initialising systems...");
 
                 Commands = new Dictionary<string, CommandSentCallback>();
-                StatCalculator = new StatCalculator();
-                ServerAccount = new Account("server"); // Create the server account (max privileges)
-                PermissionAuthority = new PermissionAuthority();
-                ContentManager = new ContentManager();
+                StatCalculator = new RwStatCalculator();
+                ServerAccount = new RwAccount("server"); // Create the server account (max privileges)
+                PermissionAuthority = new RwPermissionAuthority();
+                ContentManager = new RwContentManager();
 
                 ServerCommands.Register(); // Register commands and permissions for the server
 
@@ -324,16 +346,22 @@ namespace Oddmatics.RozWorld.Server
                 }
 
                 if (Starting != null)
-                    Starting(this, new EventArgs());
+                    Starting(this, EventArgs.Empty);
 
                 // Done loading plugins
 
                 Logger.Out("[STAT] Finished loading plugins!");
 
+                // Load worlds here
+
                 Logger.Out("[STAT] Server done loading!");
+
+                if (Started != null)
+                    Started(this, EventArgs.Empty);
+
                 Logger.Out("[STAT] Hello! This is " + ServerName + " (version " + ServerVersion + ").");
 
-                Started = true;
+                HasStarted = true;
             }
             else
                 throw new InvalidOperationException("An ILogger instance must be attached before calling Start().");
@@ -342,6 +370,11 @@ namespace Oddmatics.RozWorld.Server
         public void Stop()
         {
             // Stop here
+        }
+
+        public bool WorldAvailable(string name)
+        {
+            return false; // TODO: code this
         }
     }
 }

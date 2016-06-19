@@ -12,10 +12,11 @@
 using Oddmatics.RozWorld.API.Generic.Chat;
 using Oddmatics.RozWorld.API.Server.Accounts;
 using System.Collections.Generic;
+using Oddmatics.RozWorld.API.Generic;
 
 namespace Oddmatics.RozWorld.Server.Accounts
 {
-    public class PermissionGroup : IPermissionGroup
+    public class RwPermissionGroup : IPermissionGroup
     {
         public string ChatPrefix { get; set; }
         public string ChatSuffix { get; set; }
@@ -40,12 +41,17 @@ namespace Oddmatics.RozWorld.Server.Accounts
         }
 
 
-        public void AddPermission(string key)
+        public bool AddPermission(string key)
         {
             string realKey = key.ToLower();
 
+            if (!RwCore.Server.PermissionAuthority.RegisteredPermissions.Contains(key))
+                return false; // Invalid permission, do not add
+
             if (!_Permissions.Contains(realKey))
                 _Permissions.Add(realKey);
+
+            return true;
         }
 
         public bool HasPermission(string key)
@@ -59,12 +65,14 @@ namespace Oddmatics.RozWorld.Server.Accounts
             throw new System.NotImplementedException();
         }
 
-        public void RemovePermission(string key)
+        public bool RemovePermission(string key)
         {
             string realKey = key.ToLower();
 
             if (_Permissions.Contains(realKey))
                 _Permissions.Remove(realKey);
+
+            return true;
         }
     }
 }

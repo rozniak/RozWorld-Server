@@ -46,15 +46,14 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Accounts\Account.cs" />
-    <Compile Include="Accounts\PermissionAuthority.cs" />
-    <Compile Include="Accounts\PermissionGroup.cs" />
+    <Compile Include="Accounts\RwAccount.cs" />
+    <Compile Include="Accounts\RwPermissionAuthority.cs" />
+    <Compile Include="Accounts\RwPermissionGroup.cs" />
     <Compile Include="ServerCommands.cs" />
-    <Compile Include="Entity\EntityFactory.cs" />
-    <Compile Include="Entity\Player.cs" />
-    <Compile Include="Entity\PlayerAttributes.cs" />
-    <Compile Include="Game\ContentManager.cs" />
-    <Compile Include="Game\StatCalculator.cs" />
+    <Compile Include="Entities\RwEntityFactory.cs" />
+    <Compile Include="Entities\RwPlayer.cs" />
+    <Compile Include="Game\RwContentManager.cs" />
+    <Compile Include="Game\RwStatCalculator.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>

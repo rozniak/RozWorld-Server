@@ -11,7 +11,7 @@
 
 using Oddmatics.RozWorld.API.Generic;
 using Oddmatics.RozWorld.API.Server.Accounts;
-using Oddmatics.RozWorld.API.Server.Entity;
+using Oddmatics.RozWorld.API.Server.Entities;
 using Oddmatics.RozWorld.API.Server.Game;
 using System;
 using System.Collections.Generic;
@@ -19,7 +19,7 @@ using System.Net;
 
 namespace Oddmatics.RozWorld.Server.Accounts
 {
-    public class Account : IAccount
+    public class RwAccount : IAccount
     {
         public IClan Clan
         {
@@ -58,14 +58,14 @@ namespace Oddmatics.RozWorld.Server.Accounts
                 return grantedPermissions.AsReadOnly();
             }
         }
-        public IPlayer PlayerInstance { get; private set; }
+        public Player PlayerInstance { get; private set; }
         public string Username { get; private set; }
 
 
         private Dictionary<string, PermissionState> PermissionStates;
 
 
-        public Account(string username)
+        public RwAccount(string username)
         {
             string realUsername = username.ToLower();
 

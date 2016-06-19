@@ -17,7 +17,7 @@ using System.Text.RegularExpressions;
 
 namespace Oddmatics.RozWorld.Server.Accounts
 {
-    public class PermissionAuthority : IPermissionAuthority
+    public class RwPermissionAuthority : IPermissionAuthority
     {
         public string DefaultGroupName { get; set; }
         public IList<string> GroupNames { get { return new List<string>(GroupRegistry.Keys).AsReadOnly(); } }
@@ -27,7 +27,7 @@ namespace Oddmatics.RozWorld.Server.Accounts
         private Dictionary<string, IPermissionGroup> GroupRegistry;
 
 
-        public PermissionAuthority()
+        public RwPermissionAuthority()
         {
             PermissionRegistry = new Dictionary<string, PermissionInfo>();
             GroupRegistry = new Dictionary<string, IPermissionGroup>();
@@ -41,7 +41,7 @@ namespace Oddmatics.RozWorld.Server.Accounts
 
             if (!GroupRegistry.ContainsKey(realName))
             {
-                var newGroup = new PermissionGroup();
+                var newGroup = new RwPermissionGroup();
                 GroupRegistry.Add(realName, newGroup);
                 return newGroup;
             }
@@ -59,7 +59,7 @@ namespace Oddmatics.RozWorld.Server.Accounts
             return PermissionRegistry[key];
         }
 
-        public void RegisterPermission(string key, string description)
+        public bool RegisterPermission(string key, string description)
         {
             string realKey = key.ToLower();
             var server = (RwServer)RwCore.Server;
@@ -68,7 +68,7 @@ namespace Oddmatics.RozWorld.Server.Accounts
             if (!syntaxCheck.IsMatch(realKey))
                 throw new ArgumentException("Invalid format for permission key.");
 
-            if (server.Started)
+            if (server.HasStarted)
                 throw new InvalidOperationException("The server has already been started, permissions must be " +
                     "registered in the starting up phase.");
 
@@ -76,9 +76,11 @@ namespace Oddmatics.RozWorld.Server.Accounts
             {
                 var permInfo = new PermissionInfo(server.CurrentPluginLoading, description);
                 PermissionRegistry.Add(realKey, permInfo);
+                return true;
             }
-            else
-                throw new ArgumentException("A permission with the same key already exists.");
+
+
+            return false;
         }
     }
 }
