@@ -241,7 +241,7 @@ namespace Oddmatics.RozWorld.Server
         {
             try
             {
-                Logger.Out("[CMD] " + sender.Username + " issued command: " + cmd);
+                Logger.Out("[CMD] " + sender.Username + " issued command: /" + cmd, false);
 
                 var args = new List<string>();
                 string[] cmdSplit = cmd.Split();
