@@ -19,11 +19,15 @@ using Oddmatics.RozWorld.API.Server.Level;
 using Oddmatics.RozWorld.Server.Accounts;
 using Oddmatics.RozWorld.Server.Entities;
 using Oddmatics.RozWorld.Server.Game;
+using Oddmatics.RozWorld.Net.Packets;
+using Oddmatics.RozWorld.Net.Server;
+using Oddmatics.RozWorld.Net.Server.Event;
 using Oddmatics.Util.IO;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Net.Sockets;
 using System.Reflection;
 
 namespace Oddmatics.RozWorld.Server
@@ -58,7 +62,6 @@ namespace Oddmatics.RozWorld.Server
         public static string DIRECTORY_LEVEL = DIRECTORY_CURRENT + @"\level";
 
         
-
         /// <summary>
         /// The config file for server variables.
         /// </summary>
@@ -90,6 +93,7 @@ namespace Oddmatics.RozWorld.Server
         private List<string> _WhitelistedPlayers;
         public IList<string> WhitelistedPlayers { get { return _WhitelistedPlayers.AsReadOnly(); } }
 
+        public event EventHandler FatalError;
         public event EventHandler Pause;
         public event EventHandler Started;
         public event EventHandler Starting;
@@ -100,6 +104,7 @@ namespace Oddmatics.RozWorld.Server
 
         private Dictionary<string, CommandSentCallback> Commands;
         public string CurrentPluginLoading { get; private set; }
+        private RwUdpServer UdpServer;
         public RwAccount ServerAccount { get; private set; }
         private string SpawnWorldGenerator = String.Empty;
         private string SpawnWorldGeneratorOptions = String.Empty;
@@ -354,6 +359,29 @@ namespace Oddmatics.RozWorld.Server
 
                 // Load worlds here
 
+                Logger.Out("[STAT] Starting listener on UDP port " + HostingPort.ToString() + "...");
+
+                try
+                {
+                    UdpServer = new RwUdpServer(HostingPort);
+                    UdpServer.Begin();
+                    UdpServer.InfoRequestReceived += new InfoRequestReceivedHandler(UdpServer_InfoRequestReceived);
+                }
+                catch (SocketException socketEx)
+                {
+                    Logger.Out("[ERR] Failed to start listener - port unavailable.");
+
+                    if (FatalError != null)
+                        FatalError(this, EventArgs.Empty);
+                }
+                catch (Exception ex)
+                {
+                    Logger.Out("[ERR] Failed to start listener - Exception:\n" + ex.Message + "\nStack:\n" + ex.StackTrace);
+
+                    if (FatalError != null)
+                        FatalError(this, EventArgs.Empty);
+                }
+
                 Logger.Out("[STAT] Server done loading!");
 
                 if (Started != null)
@@ -365,6 +393,15 @@ namespace Oddmatics.RozWorld.Server
             }
             else
                 throw new InvalidOperationException("An ILogger instance must be attached before calling Start().");
+        }
+
+        void UdpServer_InfoRequestReceived(RwUdpServer sender, ServerInfoRequestPacket packet)
+        {
+            Logger.Out("[UDP] Received info request!");
+            Logger.Out("[UDP] Client endpoint: " + packet.SenderEndPoint.ToString());
+            Logger.Out("[UDP] Client implementation: " + packet.ClientImplementation);
+            Logger.Out("[UDP] Client version: " + packet.ClientVersion);
+            Logger.Out("[UDP] Requesting server implementation: " + packet.ServerImplementation);
         }
 
         public void Stop()

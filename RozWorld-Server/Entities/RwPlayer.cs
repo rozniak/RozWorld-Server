@@ -9,10 +9,7 @@
  * Sharing, editing and general licence term information can be found inside of the "LICENCE.MD" file that should be located in the root of this project's directory structure.
  */
 
-using Oddmatics.RozWorld.API.Generic;
-using Oddmatics.RozWorld.API.Generic.Level;
-using Oddmatics.RozWorld.API.Server.Accounts;
-using Oddmatics.RozWorld.API.Server.Game;
+using Oddmatics.RozWorld.API.Server.Item;
 using Oddmatics.RozWorld.API.Server.Entities;
 using System;
 
@@ -20,12 +17,27 @@ namespace Oddmatics.RozWorld.Server.Entities
 {
     public class RwPlayer : Player
     {
+        public override bool AFK { get; set; }
+        public override string DisplayName { get; set; }
+        public override IInventory Inventory { get; set; }
+        public override bool IsControllable { get { return false; } } // For the sake of building rn
+        public override bool IsFreezable { get { return true; } }
+        public override bool IsFlammable { get { return true; } }
+        public override int Mass { get { return 0; } } // TODO: decide this mass much later on
+        public override bool IsRealPlayer { get; protected set; }
+        public override IItem ItemInHand { get; set; }
+        public override bool Joinable { get; set; }
+        public override string Status { get; set; }
+        public override byte Visibility { get; set; }
+        public override bool Online { get { return false; } } // For the sake of building rn
+        public override bool VisibleOnScoreboard { get; set; }
+
+
         public RwPlayer(string name)
         {
 
         }
 
-        public override bool AFK { get; set; }
 
         public override void Ban(string reason = "")
         {
@@ -37,69 +49,9 @@ namespace Oddmatics.RozWorld.Server.Entities
             throw new NotImplementedException();
         }
 
-        public override string DisplayName
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
         public override bool HasPermission(string key)
         {
-            throw new NotImplementedException();
-        }
-
-        public override API.Server.Item.IInventory Inventory
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public override bool IsRealPlayer
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-            protected set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public override API.Server.Item.IItem ItemInHand
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public override bool Joinable
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-            set
-            {
-                throw new NotImplementedException();
-            }
+            return false;
         }
 
         public override void Kick(string reason = "")
@@ -107,10 +59,7 @@ namespace Oddmatics.RozWorld.Server.Entities
             throw new NotImplementedException();
         }
 
-        public override bool Online
-        {
-            get { throw new NotImplementedException(); }
-        }
+        
 
         public override void SendInviteTo(Player recipient)
         {
@@ -130,62 +79,6 @@ namespace Oddmatics.RozWorld.Server.Entities
         public override void SendPublicMessage(string message)
         {
             throw new NotImplementedException();
-        }
-
-        public override string Status
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public override byte Visibility
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public override bool VisibleOnScoreboard
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public override bool IsFreezable
-        {
-            get { throw new NotImplementedException(); }
-        }
-
-        public override bool IsControllable
-        {
-            get { throw new NotImplementedException(); }
-        }
-
-        public override bool IsFlammable
-        {
-            get { throw new NotImplementedException(); }
-        }
-
-        public override int Mass
-        {
-            get { throw new NotImplementedException(); }
         }
     }
 }
