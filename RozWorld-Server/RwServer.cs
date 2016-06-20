@@ -373,6 +373,8 @@ namespace Oddmatics.RozWorld.Server
 
                     if (FatalError != null)
                         FatalError(this, EventArgs.Empty);
+
+                    return;
                 }
                 catch (Exception ex)
                 {
@@ -380,6 +382,8 @@ namespace Oddmatics.RozWorld.Server
 
                     if (FatalError != null)
                         FatalError(this, EventArgs.Empty);
+
+                    return;
                 }
 
                 Logger.Out("[STAT] Server done loading!");
