@@ -27,6 +27,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Net.Sockets;
 using System.Reflection;
 
@@ -93,6 +94,7 @@ namespace Oddmatics.RozWorld.Server
         private List<string> _WhitelistedPlayers;
         public IList<string> WhitelistedPlayers { get { return _WhitelistedPlayers.AsReadOnly(); } }
 
+
         public event EventHandler FatalError;
         public event EventHandler Pause;
         public event EventHandler Started;
@@ -103,12 +105,14 @@ namespace Oddmatics.RozWorld.Server
 
 
         private Dictionary<string, CommandSentCallback> Commands;
+        private string[] CompatibleServerNames = new string[] { "vanilla", "*" };
+        private ushort CompatibleVanillaVersion = 1;
         public string CurrentPluginLoading { get; private set; }
-        private RwUdpServer UdpServer;
+        public bool HasStarted { get; private set; }
         public RwAccount ServerAccount { get; private set; }
         private string SpawnWorldGenerator = String.Empty;
         private string SpawnWorldGeneratorOptions = String.Empty;
-        public bool HasStarted { get; private set; }
+        private RwUdpServer UdpServer;
 
 
         /// <summary>
@@ -399,13 +403,18 @@ namespace Oddmatics.RozWorld.Server
                 throw new InvalidOperationException("An ILogger instance must be attached before calling Start().");
         }
 
-        void UdpServer_InfoRequestReceived(RwUdpServer sender, ServerInfoRequestPacket packet)
+        private void UdpServer_InfoRequestReceived(RwUdpServer sender, ServerInfoRequestPacket packet)
         {
-            Logger.Out("[UDP] Received info request!");
-            Logger.Out("[UDP] Client endpoint: " + packet.SenderEndPoint.ToString());
-            Logger.Out("[UDP] Client implementation: " + packet.ClientImplementation);
-            Logger.Out("[UDP] Client version: " + packet.ClientVersion);
-            Logger.Out("[UDP] Requesting server implementation: " + packet.ServerImplementation);
+            Logger.Out("[UDP] Server info request received by " + packet.SenderEndPoint.ToString());
+
+            // Client is compatible if the server implemention matches and either the client isn't vanilla or if it is
+            // vanilla, it must be the compatible version
+            bool compatible = CompatibleServerNames.Contains(packet.ServerImplementation.ToLower()) &&
+                (!packet.ClientImplementation.EqualsIgnoreCase("vanilla") ||
+                    packet.ClientVersionRaw == CompatibleVanillaVersion);
+
+            UdpServer.Send(new ServerInfoResponsePacket(compatible, MaxPlayers, (short)OnlinePlayers.Count, "Vanilla", BrowserName),
+                packet.SenderEndPoint);
         }
 
         public void Stop()
