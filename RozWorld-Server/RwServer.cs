@@ -16,12 +16,12 @@ using Oddmatics.RozWorld.API.Server.Entities;
 using Oddmatics.RozWorld.API.Server.Event;
 using Oddmatics.RozWorld.API.Server.Game;
 using Oddmatics.RozWorld.API.Server.Level;
-using Oddmatics.RozWorld.Server.Accounts;
-using Oddmatics.RozWorld.Server.Entities;
-using Oddmatics.RozWorld.Server.Game;
 using Oddmatics.RozWorld.Net.Packets;
 using Oddmatics.RozWorld.Net.Server;
 using Oddmatics.RozWorld.Net.Server.Event;
+using Oddmatics.RozWorld.Server.Accounts;
+using Oddmatics.RozWorld.Server.Entities;
+using Oddmatics.RozWorld.Server.Game;
 using Oddmatics.Util.IO;
 using System;
 using System.Collections.Generic;
@@ -138,6 +138,11 @@ namespace Oddmatics.RozWorld.Server
         }
 
         public Player GetPlayerAbsolute(string name)
+        {
+            return null; // TODO: code this
+        }
+
+        public Player GetPlayerByDisplayName(string name)
         {
             return null; // TODO: code this
         }
