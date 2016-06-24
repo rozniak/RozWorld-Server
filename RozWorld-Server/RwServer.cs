@@ -9,6 +9,7 @@
  * Sharing, editing and general licence term information can be found inside of the "LICENCE.MD" file that should be located in the root of this project's directory structure.
  */
 
+using Oddmatics.RozWorld.API.Generic;
 using Oddmatics.RozWorld.API.Generic.Game;
 using Oddmatics.RozWorld.API.Server;
 using Oddmatics.RozWorld.API.Server.Accounts;
@@ -289,123 +290,124 @@ namespace Oddmatics.RozWorld.Server
 
         public void Start()
         {
-            // Start here - a logger is required
-            if (Logger != null)
+            // A logger must be set and this should be set as the current server in RwCore
+            if (RwCore.Server != this)
+                throw new InvalidOperationException("RwServer.Start: RwCore.Server must reference this server instance before calling Start().");
+
+            if (Logger == null)
+                throw new InvalidOperationException("RwServer.Start: An ILogger instance must be attached before calling Start().");
+
+            Logger.Out("[STAT] RozWorld server starting...");
+            Logger.Out("[STAT] Initialising directories...");
+
+            FileSystem.MakeDirectory(DIRECTORY_ACCOUNTS);
+            FileSystem.MakeDirectory(DIRECTORY_LEVEL);
+            FileSystem.MakeDirectory(DIRECTORY_PERMISSIONS);
+            FileSystem.MakeDirectory(DIRECTORY_PLUGINS);
+
+            Logger.Out("[STAT] Initialising systems...");
+
+            Commands = new Dictionary<string, CommandSentCallback>();
+            StatCalculator = new RwStatCalculator();
+            ServerAccount = new RwAccount("server"); // Create the server account (max privileges)
+            PermissionAuthority = new RwPermissionAuthority();
+            ContentManager = new RwContentManager();
+
+            ServerCommands.Register(); // Register commands and permissions for the server
+
+            Logger.Out("[STAT] Setting configs...");
+
+            string configPath = DIRECTORY_CURRENT + "\\" + FILE_CONFIG;
+
+            if (!File.Exists(configPath))
+                MakeDefaultConfigs(configPath);
+
+            LoadConfigs(configPath);
+
+            Logger.Out("[STAT] Loading plugins...");
+
+            _Plugins = new List<IPlugin>();
+
+            // Load plugins here
+            var pluginClasses = new List<Type>();
+
+            foreach (string file in Directory.GetFiles(DIRECTORY_PLUGINS, "*.dll"))
             {
-                Logger.Out("[STAT] RozWorld server starting...");
-                Logger.Out("[STAT] Initialising directories...");
-
-                FileSystem.MakeDirectory(DIRECTORY_ACCOUNTS);
-                FileSystem.MakeDirectory(DIRECTORY_LEVEL);
-                FileSystem.MakeDirectory(DIRECTORY_PERMISSIONS);
-                FileSystem.MakeDirectory(DIRECTORY_PLUGINS);
-
-                Logger.Out("[STAT] Initialising systems...");
-
-                Commands = new Dictionary<string, CommandSentCallback>();
-                StatCalculator = new RwStatCalculator();
-                ServerAccount = new RwAccount("server"); // Create the server account (max privileges)
-                PermissionAuthority = new RwPermissionAuthority();
-                ContentManager = new RwContentManager();
-
-                ServerCommands.Register(); // Register commands and permissions for the server
-
-                Logger.Out("[STAT] Setting configs...");
-
-                string configPath = DIRECTORY_CURRENT + "\\" + FILE_CONFIG;
-
-                if (!File.Exists(configPath))
-                    MakeDefaultConfigs(configPath);
-
-                LoadConfigs(configPath);
-
-                Logger.Out("[STAT] Loading plugins...");
-
-                _Plugins = new List<IPlugin>();
-
-                // Load plugins here
-                var pluginClasses = new List<Type>();
-
-                foreach (string file in Directory.GetFiles(DIRECTORY_PLUGINS, "*.dll"))
-                {
-                    try
-                    {
-                        Assembly assembly = Assembly.LoadFrom(file);
-                        Type[] detectedObjects = assembly.GetTypes();
-
-                        foreach (var detectedObject in detectedObjects)
-                        {
-                            if (detectedObject.GetInterface("IPlugin") == typeof(IPlugin))
-                                pluginClasses.Add(detectedObject);
-                        }
-                    }
-                    catch (ReflectionTypeLoadException reflectionEx)
-                    {
-                        Logger.Out("[ERR] An error occurred trying to enumerate the types inside of the plugin \""
-                            + Path.GetFileName(file) + "\", this plugin cannot be loaded. It may have been built for" +
-                            " a different version of the RozWorld API.");
-                    }
-                    catch (Exception ex)
-                    {
-                        Logger.Out("[ERR] An error occurred trying to load plugin \"" + Path.GetFileName(file) + "\", this " +
-                            "plugin cannot be loaded. The exception that occurred reported the following:\n" +
-                            ex.Message + "\nStack:\n" + ex.StackTrace);
-                    }
-                }
-
-                foreach (var plugin in pluginClasses)
-                {
-                    CurrentPluginLoading = plugin.Name;
-                    _Plugins.Add((IPlugin)Activator.CreateInstance(plugin));
-                }
-
-                if (Starting != null)
-                    Starting(this, EventArgs.Empty);
-
-                // Done loading plugins
-
-                Logger.Out("[STAT] Finished loading plugins!");
-
-                // Load worlds here
-
-                Logger.Out("[STAT] Starting listener on UDP port " + HostingPort.ToString() + "...");
-
                 try
                 {
-                    UdpServer = new RwUdpServer(HostingPort);
-                    UdpServer.Begin();
-                    UdpServer.InfoRequestReceived += new InfoRequestReceivedHandler(UdpServer_InfoRequestReceived);
+                    Assembly assembly = Assembly.LoadFrom(file);
+                    Type[] detectedObjects = assembly.GetTypes();
+
+                    foreach (var detectedObject in detectedObjects)
+                    {
+                        if (detectedObject.GetInterface("IPlugin") == typeof(IPlugin))
+                            pluginClasses.Add(detectedObject);
+                    }
                 }
-                catch (SocketException socketEx)
+                catch (ReflectionTypeLoadException reflectionEx)
                 {
-                    Logger.Out("[ERR] Failed to start listener - port unavailable.");
-
-                    if (FatalError != null)
-                        FatalError(this, EventArgs.Empty);
-
-                    return;
+                    Logger.Out("[ERR] An error occurred trying to enumerate the types inside of the plugin \""
+                        + Path.GetFileName(file) + "\", this plugin cannot be loaded. It may have been built for" +
+                        " a different version of the RozWorld API.");
                 }
                 catch (Exception ex)
                 {
-                    Logger.Out("[ERR] Failed to start listener - Exception:\n" + ex.Message + "\nStack:\n" + ex.StackTrace);
-
-                    if (FatalError != null)
-                        FatalError(this, EventArgs.Empty);
-
-                    return;
+                    Logger.Out("[ERR] An error occurred trying to load plugin \"" + Path.GetFileName(file) + "\", this " +
+                        "plugin cannot be loaded. The exception that occurred reported the following:\n" +
+                        ex.Message + "\nStack:\n" + ex.StackTrace);
                 }
-
-                Logger.Out("[STAT] Server done loading!");
-
-                if (Started != null)
-                    Started(this, EventArgs.Empty);
-
-                Logger.Out("[STAT] Hello! This is " + ServerName + " (version " + ServerVersion + ").");
-
-                HasStarted = true;
             }
-            else
-                throw new InvalidOperationException("An ILogger instance must be attached before calling Start().");
+
+            foreach (var plugin in pluginClasses)
+            {
+                CurrentPluginLoading = plugin.Name;
+                _Plugins.Add((IPlugin)Activator.CreateInstance(plugin));
+            }
+
+            if (Starting != null)
+                Starting(this, EventArgs.Empty);
+
+            // Done loading plugins
+
+            Logger.Out("[STAT] Finished loading plugins!");
+
+            // Load worlds here
+
+            Logger.Out("[STAT] Starting listener on UDP port " + HostingPort.ToString() + "...");
+
+            try
+            {
+                UdpServer = new RwUdpServer(HostingPort);
+                UdpServer.Begin();
+                UdpServer.InfoRequestReceived += new InfoRequestReceivedHandler(UdpServer_InfoRequestReceived);
+            }
+            catch (SocketException socketEx)
+            {
+                Logger.Out("[ERR] Failed to start listener - port unavailable.");
+
+                if (FatalError != null)
+                    FatalError(this, EventArgs.Empty);
+
+                return;
+            }
+            catch (Exception ex)
+            {
+                Logger.Out("[ERR] Failed to start listener - Exception:\n" + ex.Message + "\nStack:\n" + ex.StackTrace);
+
+                if (FatalError != null)
+                    FatalError(this, EventArgs.Empty);
+
+                return;
+            }
+
+            Logger.Out("[STAT] Server done loading!");
+
+            if (Started != null)
+                Started(this, EventArgs.Empty);
+
+            Logger.Out("[STAT] Hello! This is " + ServerName + " (version " + ServerVersion + ").");
+
+            HasStarted = true;
         }
 
         private void UdpServer_InfoRequestReceived(RwUdpServer sender, ServerInfoRequestPacket packet)
