@@ -378,8 +378,9 @@ namespace Oddmatics.RozWorld.Server
             try
             {
                 UdpServer = new RwUdpServer(HostingPort);
+                UdpServer.InfoRequestReceived += new PacketReceivedEventHandler(UdpServer_InfoRequestReceived);
+                UdpServer.SignUpRequestReceived += new PacketReceivedEventHandler(UdpServer_SignUpRequestReceived);
                 UdpServer.Begin();
-                UdpServer.InfoRequestReceived += new InfoRequestReceivedHandler(UdpServer_InfoRequestReceived);
             }
             catch (SocketException socketEx)
             {
@@ -410,15 +411,28 @@ namespace Oddmatics.RozWorld.Server
             HasStarted = true;
         }
 
-        private void UdpServer_InfoRequestReceived(RwUdpServer sender, ServerInfoRequestPacket packet)
+
+        private void UdpServer_SignUpRequestReceived(RwUdpServer sender, IPacket packet)
+        {
+            Logger.Out("[UDP] Sign up request received by " + packet.SenderEndPoint.ToString());
+
+            // TODO: get accounts working here...
+            // For now just respond with a not implemented error
+
+            UdpServer.Send(new SignUpResponsePacket(false, "", ErrorMessage.NOT_IMPLEMENTED), packet.SenderEndPoint);
+        }
+
+        private void UdpServer_InfoRequestReceived(RwUdpServer sender, IPacket packet)
         {
             Logger.Out("[UDP] Server info request received by " + packet.SenderEndPoint.ToString());
 
+            var realPacket = (ServerInfoRequestPacket)packet;
+
             // Client is compatible if the server implemention matches and either the client isn't vanilla or if it is
             // vanilla, it must be the compatible version
-            bool compatible = CompatibleServerNames.Contains(packet.ServerImplementation.ToLower()) &&
-                (!packet.ClientImplementation.EqualsIgnoreCase("vanilla") ||
-                    packet.ClientVersionRaw == CompatibleVanillaVersion);
+            bool compatible = CompatibleServerNames.Contains(realPacket.ServerImplementation.ToLower()) &&
+                (!realPacket.ClientImplementation.EqualsIgnoreCase("vanilla") ||
+                    realPacket.ClientVersionRaw == CompatibleVanillaVersion);
 
             UdpServer.Send(new ServerInfoResponsePacket(compatible, MaxPlayers, (short)OnlinePlayers.Count, "Vanilla", BrowserName),
                 packet.SenderEndPoint);
