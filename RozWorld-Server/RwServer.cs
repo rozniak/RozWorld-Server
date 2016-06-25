@@ -378,8 +378,8 @@ namespace Oddmatics.RozWorld.Server
             try
             {
                 UdpServer = new RwUdpServer(HostingPort);
-                UdpServer.InfoRequestReceived += new PacketReceivedEventHandler(UdpServer_InfoRequestReceived);
-                UdpServer.SignUpRequestReceived += new PacketReceivedEventHandler(UdpServer_SignUpRequestReceived);
+                UdpServer.InfoRequestReceived += new PacketEventHandler(UdpServer_InfoRequestReceived);
+                UdpServer.SignUpRequestReceived += new PacketEventHandler(UdpServer_SignUpRequestReceived);
                 UdpServer.Begin();
             }
             catch (SocketException socketEx)
