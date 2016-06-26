@@ -13,8 +13,11 @@ using Oddmatics.RozWorld.API.Generic;
 using Oddmatics.RozWorld.API.Server.Accounts;
 using Oddmatics.RozWorld.API.Server.Entities;
 using Oddmatics.RozWorld.API.Server.Game;
+using Oddmatics.RozWorld.Server.Entities;
+using Oddmatics.Util.IO;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Net;
 
 namespace Oddmatics.RozWorld.Server.Accounts
@@ -27,24 +30,12 @@ namespace Oddmatics.RozWorld.Server.Accounts
         }
         public DateTime CreationDate { get; private set; }
         public IPAddress CreationIP { get; private set; }
+        public IPAddress CurrentIP { get; private set; }
+        public string DisplayName { get; set; }
         public IPAddress LastLoginIP { get; private set; }
-        public bool IsPlayer { get; private set; }
-        public bool IsServer { get; private set; }
-        private string _PermissionGroupName = String.Empty;
-        public string PermissionGroupName
-        {
-            get { return _PermissionGroupName; }
-            set
-            {
-                if (IsServer)
-                    throw new NotSupportedException("Permission group cannot be set for the server account.");
-
-                if (!RwCore.Server.PermissionAuthority.GroupNames.Contains(value))
-                    throw new MissingMemberException("The permission group \"" + value + "\" does not exist.");
-
-                _PermissionGroupName = value;
-            }
-        }
+        public bool IsPlayer { get { return PlayerInstance != null; } }
+        public bool IsServer { get { return Username == "server"; } }
+        public IPermissionGroup PermissionGroup { get; private set; }
         public IList<string> Permissions
         {
             get
@@ -65,18 +56,24 @@ namespace Oddmatics.RozWorld.Server.Accounts
         private Dictionary<string, PermissionState> PermissionStates;
 
 
-        public RwAccount(string username)
+        public RwAccount(string username, byte[] passwordHash, IPAddress loginIP)
         {
             string realUsername = username.ToLower();
 
-            if (username == "server")
-            {
-                IsServer = true;
+            if (realUsername == "server")
                 Username = realUsername;
-            }
             else
             {
-                // Load account details here
+                string[] account = Directory.GetFiles(RwServer.DIRECTORY_ACCOUNTS, realUsername + ".*.acc");
+
+                if (account.Length == 1) // Account exists - load it
+                {
+
+                }
+                else if (account.Length == 0) // Account not found
+                    throw new IOException("RwAccount.New: Account file not found for '" + realUsername + "'.");
+                else // Duplicate accounts found - unacceptable
+                    throw new IOException("RwAccount.New: Duplicate account files found for the account '" + realUsername + "'.");
             }
         }
 
@@ -109,11 +106,25 @@ namespace Oddmatics.RozWorld.Server.Accounts
                     case PermissionState.Unset: break;
                 }
 
-                return RwCore.Server.PermissionAuthority.GetGroup(PermissionGroupName).HasPermission(key);
+                return PermissionGroup.HasPermission(key);
             }
         }
 
-        public void SetAccountPermission(string key, PermissionState newState)
+        public bool Save()
+        {
+            try
+            {
+                // TODO: Save here
+                return true;
+            }
+            catch (Exception ex)
+            {
+                RwCore.Server.Logger.Out("[ERR] Unable to save account '" + Username + "'. Exception: " + ex.Message);
+                return false;
+            }
+        }
+
+        public bool SetAccountPermission(string key, PermissionState newState)
         {
             if (!IsServer)
             {
@@ -126,9 +137,20 @@ namespace Oddmatics.RozWorld.Server.Accounts
                 }
                 else if (newState != PermissionState.Unset)
                     PermissionStates.Add(key, newState);
+
+                return true;
             }
-            else
-                throw new InvalidOperationException("Account permissions cannot be set for the server account.");
+
+            return false;
+        }
+
+        public bool SetPermissionGroup(string name)
+        {
+            if (IsServer || !RwCore.Server.PermissionAuthority.GroupNames.Contains(name))
+                return false;
+
+            PermissionGroup = RwCore.Server.PermissionAuthority.GetGroup(name);
+            return true;
         }
 
         public void ValidatePlayerInstance()

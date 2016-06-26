@@ -50,6 +50,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Accounts\RwAccount.cs" />
+    <Compile Include="Accounts\RwAccountsManager.cs" />
     <Compile Include="Accounts\RwPermissionAuthority.cs" />
     <Compile Include="Accounts\RwPermissionGroup.cs" />
     <Compile Include="ServerCommands.cs" />

@@ -18,8 +18,8 @@ using Oddmatics.RozWorld.API.Server.Event;
 using Oddmatics.RozWorld.API.Server.Game;
 using Oddmatics.RozWorld.API.Server.Level;
 using Oddmatics.RozWorld.Net.Packets;
+using Oddmatics.RozWorld.Net.Packets.Event;
 using Oddmatics.RozWorld.Net.Server;
-using Oddmatics.RozWorld.Net.Server.Event;
 using Oddmatics.RozWorld.Server.Accounts;
 using Oddmatics.RozWorld.Server.Entities;
 using Oddmatics.RozWorld.Server.Game;
@@ -29,6 +29,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Sockets;
 using System.Reflection;
 
@@ -39,29 +40,29 @@ namespace Oddmatics.RozWorld.Server
         #region Path Constants
 
         /// <summary>
-        /// The root directory this library is active in.
-        /// </summary>
-        public static string DIRECTORY_CURRENT = Directory.GetCurrentDirectory();
-
-        /// <summary>
         /// The accounts directory.
         /// </summary>
-        public static string DIRECTORY_ACCOUNTS = DIRECTORY_CURRENT + @"\accounts";
+        public static string DIRECTORY_ACCOUNTS = Directory.GetCurrentDirectory() + @"\accounts";
 
         /// <summary>
         /// The permissions directory.
         /// </summary>
-        public static string DIRECTORY_PERMISSIONS = DIRECTORY_CURRENT + @"\permissions";
+        public static string DIRECTORY_PERMISSIONS = Directory.GetCurrentDirectory() + @"\permissions";
+
+        /// <summary>
+        /// The players directory.
+        /// </summary>
+        public static string DIRECTORY_PLAYERS = Directory.GetCurrentDirectory() + @"\players";
         
         /// <summary>
         /// The plugins directory.
         /// </summary>
-        public static string DIRECTORY_PLUGINS = DIRECTORY_CURRENT + @"\plugins";
+        public static string DIRECTORY_PLUGINS = Directory.GetCurrentDirectory() + @"\plugins";
 
         /// <summary>
         /// The level/worlds directory.
         /// </summary>
-        public static string DIRECTORY_LEVEL = DIRECTORY_CURRENT + @"\level";
+        public static string DIRECTORY_LEVEL = Directory.GetCurrentDirectory() + @"\level";
 
         
         /// <summary>
@@ -71,6 +72,7 @@ namespace Oddmatics.RozWorld.Server
 
         #endregion
 
+        public IAccountsManager AccountsManager { get; private set; }
         public string BrowserName { get; private set; }
         public IContentManager ContentManager { get; private set; }
         public Difficulty GameDifficulty { get; set; }
@@ -307,17 +309,18 @@ namespace Oddmatics.RozWorld.Server
 
             Logger.Out("[STAT] Initialising systems...");
 
+            AccountsManager = new RwAccountsManager();
+            ContentManager = new RwContentManager();
+            PermissionAuthority = new RwPermissionAuthority();
             Commands = new Dictionary<string, CommandSentCallback>();
             StatCalculator = new RwStatCalculator();
-            ServerAccount = new RwAccount("server"); // Create the server account (max privileges)
-            PermissionAuthority = new RwPermissionAuthority();
-            ContentManager = new RwContentManager();
+            ServerAccount = new RwAccount("server", null, IPAddress.None); // Create the server account (max privileges)
 
             ServerCommands.Register(); // Register commands and permissions for the server
 
             Logger.Out("[STAT] Setting configs...");
 
-            string configPath = DIRECTORY_CURRENT + "\\" + FILE_CONFIG;
+            string configPath = Directory.GetCurrentDirectory() + "\\" + FILE_CONFIG;
 
             if (!File.Exists(configPath))
                 MakeDefaultConfigs(configPath);
@@ -411,18 +414,18 @@ namespace Oddmatics.RozWorld.Server
             HasStarted = true;
         }
 
-
-        private void UdpServer_SignUpRequestReceived(RwUdpServer sender, IPacket packet)
+        public void Stop()
         {
-            Logger.Out("[UDP] Sign up request received by " + packet.SenderEndPoint.ToString());
-
-            // TODO: get accounts working here...
-            // For now just respond with a not implemented error
-
-            UdpServer.Send(new SignUpResponsePacket(false, "", ErrorMessage.NOT_IMPLEMENTED), packet.SenderEndPoint);
+            // Stop here
         }
 
-        private void UdpServer_InfoRequestReceived(RwUdpServer sender, IPacket packet)
+        public bool WorldAvailable(string name)
+        {
+            return false; // TODO: code this
+        }
+
+
+        private void UdpServer_InfoRequestReceived(object sender, IPacket packet)
         {
             Logger.Out("[UDP] Server info request received by " + packet.SenderEndPoint.ToString());
 
@@ -434,18 +437,20 @@ namespace Oddmatics.RozWorld.Server
                 (!realPacket.ClientImplementation.EqualsIgnoreCase("vanilla") ||
                     realPacket.ClientVersionRaw == CompatibleVanillaVersion);
 
-            UdpServer.Send(new ServerInfoResponsePacket(compatible, MaxPlayers, (short)OnlinePlayers.Count, "Vanilla", BrowserName),
+            UdpServer.Send(new ServerInfoResponsePacket(compatible, MaxPlayers, (short)OnlinePlayers.Count, "Vanilla",
+                BrowserName), packet.SenderEndPoint);
+        }
+
+        private void UdpServer_SignUpRequestReceived(object sender, IPacket packet)
+        {
+            Logger.Out("[UDP] Sign up request received by " + packet.SenderEndPoint.ToString());
+
+            var signUpPacket = (SignUpRequestPacket)packet;
+            byte result = ((RwAccountsManager)AccountsManager).CreateAccount(signUpPacket.Username,
+                signUpPacket.PasswordHash, signUpPacket.SenderEndPoint.Address);
+
+            UdpServer.Send(new SignUpResponsePacket(result == ErrorMessage.NO_ERROR, signUpPacket.Username, result),
                 packet.SenderEndPoint);
-        }
-
-        public void Stop()
-        {
-            // Stop here
-        }
-
-        public bool WorldAvailable(string name)
-        {
-            return false; // TODO: code this
         }
     }
 }

@@ -12,6 +12,7 @@
 using Oddmatics.RozWorld.API.Server.Item;
 using Oddmatics.RozWorld.API.Server.Entities;
 using System;
+using System.Text.RegularExpressions;
 
 namespace Oddmatics.RozWorld.Server.Entities
 {
@@ -79,6 +80,11 @@ namespace Oddmatics.RozWorld.Server.Entities
         public override void SendPublicMessage(string message)
         {
             throw new NotImplementedException();
+        }
+
+        public static bool ValidName(string name)
+        {
+            return new Regex("^[A-Za-z0-9_]+$").IsMatch(name);
         }
     }
 }

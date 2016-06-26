@@ -37,8 +37,7 @@ namespace Oddmatics.RozWorld.Server.Entities
         public Player CreateBotPlayer(string name)
         {
             // Make sure the name is valid (alphanumeric and underscores)
-            Regex nameRule = new Regex("^[A-Za-z0-9_]+$");
-            if (nameRule.IsMatch(name))
+            if (RwPlayer.ValidName(name))
                 return new RwPlayer(name);
             else
                 throw new ArgumentException("Invalid characters in player name.");
@@ -47,8 +46,7 @@ namespace Oddmatics.RozWorld.Server.Entities
         public Player CreateChatBotPlayer(string name)
         {
             // Make sure the name is valid (alphanumeric and underscores)
-            Regex nameRule = new Regex("^[A-Za-z0-9_]+$");
-            if (nameRule.IsMatch(name))
+            if (RwPlayer.ValidName(name))
             {
                 // TODO: Perform player check here
                 return null;
