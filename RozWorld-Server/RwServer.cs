@@ -45,6 +45,11 @@ namespace Oddmatics.RozWorld.Server
         public static string DIRECTORY_ACCOUNTS = Directory.GetCurrentDirectory() + @"\accounts";
 
         /// <summary>
+        /// The level/worlds directory.
+        /// </summary>
+        public static string DIRECTORY_LEVEL = Directory.GetCurrentDirectory() + @"\level";
+
+        /// <summary>
         /// The permissions directory.
         /// </summary>
         public static string DIRECTORY_PERMISSIONS = Directory.GetCurrentDirectory() + @"\permissions";
@@ -58,11 +63,6 @@ namespace Oddmatics.RozWorld.Server
         /// The plugins directory.
         /// </summary>
         public static string DIRECTORY_PLUGINS = Directory.GetCurrentDirectory() + @"\plugins";
-
-        /// <summary>
-        /// The level/worlds directory.
-        /// </summary>
-        public static string DIRECTORY_LEVEL = Directory.GetCurrentDirectory() + @"\level";
 
         
         /// <summary>
@@ -308,6 +308,7 @@ namespace Oddmatics.RozWorld.Server
             FileSystem.MakeDirectory(DIRECTORY_ACCOUNTS);
             FileSystem.MakeDirectory(DIRECTORY_LEVEL);
             FileSystem.MakeDirectory(DIRECTORY_PERMISSIONS);
+            FileSystem.MakeDirectory(DIRECTORY_PLAYERS);
             FileSystem.MakeDirectory(DIRECTORY_PLUGINS);
 
             Logger.Out("[STAT] Initialising systems...");
@@ -469,6 +470,10 @@ namespace Oddmatics.RozWorld.Server
             var signUpPacket = (SignUpRequestPacket)packet;
             byte result = ((RwAccountsManager)AccountsManager).CreateAccount(signUpPacket.Username,
                 signUpPacket.PasswordHash, signUpPacket.SenderEndPoint.Address);
+
+            if (result == ErrorMessage.NO_ERROR)
+                Logger.Out("[STAT] Account sign up complete for username '" + signUpPacket.Username +
+                    "' from " + packet.SenderEndPoint.ToString() + ".");
 
             UdpServer.Send(new SignUpResponsePacket(result == ErrorMessage.NO_ERROR, signUpPacket.Username, result),
                 packet.SenderEndPoint);
