@@ -31,10 +31,15 @@ namespace Oddmatics.RozWorld.Server
             {
                 if (!Registered)
                 {
+                    // Command /say
                     RwCore.Server.PermissionAuthority.RegisterPermission("rwcore.say.*", "Full talking permissions");
                     RwCore.Server.PermissionAuthority.RegisterPermission("rwcore.say.self", "Talk in game chat.");
                     RwCore.Server.PermissionAuthority.RegisterPermission("rwcore.say.server", "Talk in game chat as the server.");
                     RwCore.Server.RegisterCommand("say", ServerSay);
+
+                    // Command /stop
+                    RwCore.Server.PermissionAuthority.RegisterPermission("rwcore.stop", "Stops the server.");
+                    RwCore.Server.RegisterCommand("stop", ServerStop);
                 }
                 else
                     throw new InvalidOperationException("Commands have already been registered.");
@@ -62,6 +67,17 @@ namespace Oddmatics.RozWorld.Server
 
                 return true;
             }
+
+            return false;
+        }
+
+        /// <summary>
+        /// [Command Callback] Handles the /stop command.
+        /// </summary>
+        private static bool ServerStop(IAccount sender, IList<string> args)
+        {
+            if (sender.HasPermission("rwcore.stop"))
+                ((RwServer)RwCore.Server).Stop();
 
             return false;
         }

@@ -299,6 +299,9 @@ namespace Oddmatics.RozWorld.Server
             if (Logger == null)
                 throw new InvalidOperationException("RwServer.Start: An ILogger instance must be attached before calling Start().");
 
+            if (HasStarted)
+                throw new InvalidOperationException("RwServer.Start: Server is already started.");
+
             Logger.Out("[STAT] RozWorld server starting...");
             Logger.Out("[STAT] Initialising directories...");
 
@@ -416,7 +419,25 @@ namespace Oddmatics.RozWorld.Server
 
         public void Stop()
         {
-            // Stop here
+            // TODO: Finish this!
+
+            Logger.Out("[STAT] Server stopping...");
+
+            // TODO: Send disconnect packets here
+
+            UdpServer.InfoRequestReceived -= UdpServer_InfoRequestReceived;
+            UdpServer.SignUpRequestReceived -= UdpServer_SignUpRequestReceived;
+            // Stop RwUdpServer here
+
+            if (Stopping != null)
+                Stopping(this, EventArgs.Empty);
+
+            // TODO: Save world and stuff
+
+            if (Stopped != null)
+                Stopped(this, EventArgs.Empty);
+
+            HasStarted = false;
         }
 
         public bool WorldAvailable(string name)
