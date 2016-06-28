@@ -318,7 +318,7 @@ namespace Oddmatics.RozWorld.Server
             PermissionAuthority = new RwPermissionAuthority();
             Commands = new Dictionary<string, CommandSentCallback>();
             StatCalculator = new RwStatCalculator();
-            ServerAccount = new RwAccount("server", null, IPAddress.None); // Create the server account (max privileges)
+            ServerAccount = new RwAccount("server"); // Create the server account (max privileges)
 
             ServerCommands.Register(); // Register commands and permissions for the server
 
@@ -386,6 +386,7 @@ namespace Oddmatics.RozWorld.Server
             {
                 UdpServer = new RwUdpServer(HostingPort);
                 UdpServer.InfoRequestReceived += new PacketEventHandler(UdpServer_InfoRequestReceived);
+                UdpServer.LogInRequestReceived += new PacketEventHandler(UdpServer_LogInRequestReceived);
                 UdpServer.SignUpRequestReceived += new PacketEventHandler(UdpServer_SignUpRequestReceived);
                 UdpServer.Begin();
             }
@@ -461,6 +462,28 @@ namespace Oddmatics.RozWorld.Server
 
             UdpServer.Send(new ServerInfoResponsePacket(compatible, MaxPlayers, (short)OnlinePlayers.Count, "Vanilla",
                 BrowserName), packet.SenderEndPoint);
+        }
+
+        private void UdpServer_LogInRequestReceived(object sender, IPacket packet)
+        {
+            Logger.Out("[UDP] Log in request received by " + packet.SenderEndPoint.ToString());
+
+            var logInPacket = (LogInRequestPacket)packet;
+            byte result;
+
+            if (logInPacket.ValidHashTime)
+            {
+                DateTime utcMidnight = DateTime.UtcNow.Date;
+                long utcHashTime = utcMidnight.Ticks + logInPacket.UtcHashTimeDifference;
+
+                var account = new RwAccount(logInPacket.Username);
+                result = account.LogIn(logInPacket.PasswordHash, utcHashTime);
+            }
+            else
+                result = ErrorMessage.HASHTIME_INVALID;
+
+            UdpServer.Send(new LogInResponsePacket(result == ErrorMessage.NO_ERROR, logInPacket.Username,
+                result), packet.SenderEndPoint);
         }
 
         private void UdpServer_SignUpRequestReceived(object sender, IPacket packet)

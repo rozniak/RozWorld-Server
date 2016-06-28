@@ -13,12 +13,15 @@ using Oddmatics.RozWorld.API.Generic;
 using Oddmatics.RozWorld.API.Server.Accounts;
 using Oddmatics.RozWorld.API.Server.Entities;
 using Oddmatics.RozWorld.API.Server.Game;
+using Oddmatics.RozWorld.Net.Packets;
 using Oddmatics.RozWorld.Server.Entities;
 using Oddmatics.Util.IO;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net;
+using System.Security.Cryptography;
 
 namespace Oddmatics.RozWorld.Server.Accounts
 {
@@ -53,10 +56,13 @@ namespace Oddmatics.RozWorld.Server.Accounts
         public string Username { get; private set; }
 
 
+        public bool LoggedIn { get; private set; }
+        private IList<byte> PasswordHash;
         private Dictionary<string, PermissionState> PermissionStates;
+        public bool Valid { get; private set; }
 
 
-        public RwAccount(string username, byte[] passwordHash, IPAddress loginIP)
+        public RwAccount(string username)
         {
             string realUsername = username.ToLower();
 
@@ -64,16 +70,28 @@ namespace Oddmatics.RozWorld.Server.Accounts
                 Username = realUsername;
             else
             {
-                string[] account = Directory.GetFiles(RwServer.DIRECTORY_ACCOUNTS, realUsername + ".*.acc");
+                string[] accountFiles = Directory.GetFiles(RwServer.DIRECTORY_ACCOUNTS, realUsername + ".*.acc");
 
-                if (account.Length == 1) // Account exists - load it
+                if (accountFiles.Length == 1)
                 {
+                    // Load bytes into a List<byte> collection so .GetRange() can be used
+                    var accountFile = new List<byte>(FileSystem.GetBinaryFile(accountFiles[0]));
 
+                    int currentIndex = 0;
+                    Username = ByteParse.NextStringByLength(accountFile, ref currentIndex, 1);
+                    DisplayName = ByteParse.NextStringByLength(accountFile, ref currentIndex, 2);
+                    PasswordHash = accountFile.GetRange(currentIndex, 32).AsReadOnly();
+                    currentIndex += 32;
+
+                    IPAddress creationIP = IPAddress.None;
+                    IPAddress lastIP = IPAddress.None;
+                    bool validIPs = 
+                        IPAddress.TryParse(ByteParse.NextStringByLength(accountFile, ref currentIndex, 1), out creationIP) &&
+                        IPAddress.TryParse(ByteParse.NextStringByLength(accountFile, ref currentIndex, 1), out lastIP);
+
+                    CreationIP = creationIP;
+                    LastLoginIP = lastIP;
                 }
-                else if (account.Length == 0) // Account not found
-                    throw new IOException("RwAccount.New: Account file not found for '" + realUsername + "'.");
-                else // Duplicate accounts found - unacceptable
-                    throw new IOException("RwAccount.New: Duplicate account files found for the account '" + realUsername + "'.");
             }
         }
 
@@ -102,12 +120,32 @@ namespace Oddmatics.RozWorld.Server.Accounts
                 {
                     case PermissionState.Denied: return false;
                     case PermissionState.Granted: return true;
+                    case PermissionState.Unset:
                     default:
-                    case PermissionState.Unset: break;
+                        break;
                 }
 
                 return PermissionGroup.HasPermission(key);
             }
+        }
+
+        public byte LogIn(byte[] passwordHash, long utcHashTime)
+        {
+            if (!Valid) // Username invalid since account isn't loaded
+                return ErrorMessage.INCORRECT_LOGIN;
+
+            if (LoggedIn)
+                return ErrorMessage.INTERNAL_ERROR; // Should not happen
+
+            var saltedPass = new List<byte>(PasswordHash);
+            saltedPass.AddRange(utcHashTime.GetBytes());
+
+            byte[] comparisonHash = new SHA256Managed().ComputeHash(saltedPass.ToArray());
+
+            if (comparisonHash.SequenceEqual(passwordHash))
+                return ErrorMessage.NO_ERROR;
+
+            return ErrorMessage.INCORRECT_LOGIN;
         }
 
         public bool Save()
