@@ -70,28 +70,28 @@ namespace Oddmatics.RozWorld.Server.Accounts
                 Username = realUsername;
             else
             {
-                string[] accountFiles = Directory.GetFiles(RwServer.DIRECTORY_ACCOUNTS, realUsername + ".*.acc");
+                //string[] accountFiles = Directory.GetFiles(RwServer.DIRECTORY_ACCOUNTS, realUsername + ".*.acc");
 
-                if (accountFiles.Length == 1)
-                {
-                    // Load bytes into a List<byte> collection so .GetRange() can be used
-                    var accountFile = new List<byte>(FileSystem.GetBinaryFile(accountFiles[0]));
+                //if (accountFiles.Length == 1)
+                //{
+                //    // Load bytes into a List<byte> collection so .GetRange() can be used
+                //    var accountFile = new List<byte>(FileSystem.GetBinaryFile(accountFiles[0]));
 
-                    int currentIndex = 0;
-                    Username = ByteParse.NextStringByLength(accountFile, ref currentIndex, 1);
-                    DisplayName = ByteParse.NextStringByLength(accountFile, ref currentIndex, 2);
-                    PasswordHash = accountFile.GetRange(currentIndex, 32).AsReadOnly();
-                    currentIndex += 32;
+                //    int currentIndex = 0;
+                //    Username = ByteParse.NextStringByLength(accountFile, ref currentIndex, 1);
+                //    DisplayName = ByteParse.NextStringByLength(accountFile, ref currentIndex, 2);
+                //    PasswordHash = accountFile.GetRange(currentIndex, 32).AsReadOnly();
+                //    currentIndex += 32;
 
-                    IPAddress creationIP = IPAddress.None;
-                    IPAddress lastIP = IPAddress.None;
-                    bool validIPs = 
-                        IPAddress.TryParse(ByteParse.NextStringByLength(accountFile, ref currentIndex, 1), out creationIP) &&
-                        IPAddress.TryParse(ByteParse.NextStringByLength(accountFile, ref currentIndex, 1), out lastIP);
+                //    IPAddress creationIP = IPAddress.None;
+                //    IPAddress lastIP = IPAddress.None;
+                //    bool validIPs = 
+                //        IPAddress.TryParse(ByteParse.NextStringByLength(accountFile, ref currentIndex, 1), out creationIP) &&
+                //        IPAddress.TryParse(ByteParse.NextStringByLength(accountFile, ref currentIndex, 1), out lastIP);
 
-                    CreationIP = creationIP;
-                    LastLoginIP = lastIP;
-                }
+                //    CreationIP = creationIP;
+                //    LastLoginIP = lastIP;
+                //}
             }
         }
 
@@ -143,7 +143,11 @@ namespace Oddmatics.RozWorld.Server.Accounts
             byte[] comparisonHash = new SHA256Managed().ComputeHash(saltedPass.ToArray());
 
             if (comparisonHash.SequenceEqual(passwordHash))
+            {
+                PasswordHash = null;
+                LoggedIn = true;
                 return ErrorMessage.NO_ERROR;
+            }
 
             return ErrorMessage.INCORRECT_LOGIN;
         }

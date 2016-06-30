@@ -61,11 +61,11 @@ namespace Oddmatics.RozWorld.Server.Accounts
                  *   [Creator's IP]
                  *   [Last login IP] -- basically null here
                  */
-                accountFile.AddRange(name.GetBytesByLength(1));
-                accountFile.AddRange(finalDisplayName.GetBytesByLength(2));
-                accountFile.AddRange(passwordHash);
-                accountFile.AddRange(creatorIP.ToString().GetBytesByLength(1));
-                accountFile.AddRange(IPAddress.None.ToString().GetBytesByLength(1));
+                //accountFile.AddRange(name.GetBytesByLength(1));
+                //accountFile.AddRange(finalDisplayName.GetBytesByLength(2));
+                //accountFile.AddRange(passwordHash);
+                //accountFile.AddRange(creatorIP.ToString().GetBytesByLength(1));
+                //accountFile.AddRange(IPAddress.None.ToString().GetBytesByLength(1));
 
                 FileSystem.PutBinaryFile(RwServer.DIRECTORY_ACCOUNTS + @"\" + realName + "."
                     + finalDisplayName.ToLower() + ".acc", accountFile.ToArray());

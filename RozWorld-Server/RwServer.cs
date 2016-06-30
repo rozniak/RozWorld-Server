@@ -448,28 +448,28 @@ namespace Oddmatics.RozWorld.Server
         }
 
 
-        private void UdpServer_InfoRequestReceived(object sender, IPacket packet)
+        private void UdpServer_InfoRequestReceived(object sender, PacketEventArgs e)
         {
-            Logger.Out("[UDP] Server info request received by " + packet.SenderEndPoint.ToString());
+            var infoPacket = (ServerInfoRequestPacket)e.Packet;
 
-            var realPacket = (ServerInfoRequestPacket)packet;
+            Logger.Out("[UDP] Server info request received by " + infoPacket.SenderEndPoint.ToString());
 
             // Client is compatible if the server implemention matches and either the client isn't vanilla or if it is
             // vanilla, it must be the compatible version
-            bool compatible = CompatibleServerNames.Contains(realPacket.ServerImplementation.ToLower()) &&
-                (!realPacket.ClientImplementation.EqualsIgnoreCase("vanilla") ||
-                    realPacket.ClientVersionRaw == CompatibleVanillaVersion);
+            bool compatible = CompatibleServerNames.Contains(infoPacket.ServerImplementation.ToLower()) &&
+                (!infoPacket.ClientImplementation.EqualsIgnoreCase("vanilla") ||
+                    infoPacket.ClientVersionRaw == CompatibleVanillaVersion);
 
             UdpServer.Send(new ServerInfoResponsePacket(compatible, MaxPlayers, (short)OnlinePlayers.Count, "Vanilla",
-                BrowserName), packet.SenderEndPoint);
+                BrowserName), infoPacket.SenderEndPoint);
         }
 
-        private void UdpServer_LogInRequestReceived(object sender, IPacket packet)
+        private void UdpServer_LogInRequestReceived(object sender, PacketEventArgs e)
         {
-            Logger.Out("[UDP] Log in request received by " + packet.SenderEndPoint.ToString());
-
-            var logInPacket = (LogInRequestPacket)packet;
+            var logInPacket = (LogInRequestPacket)e.Packet;
             byte result;
+
+            Logger.Out("[UDP] Log in request received by " + logInPacket.SenderEndPoint.ToString());
 
             if (logInPacket.ValidHashTime)
             {
@@ -483,23 +483,23 @@ namespace Oddmatics.RozWorld.Server
                 result = ErrorMessage.HASHTIME_INVALID;
 
             UdpServer.Send(new LogInResponsePacket(result == ErrorMessage.NO_ERROR, logInPacket.Username,
-                result), packet.SenderEndPoint);
+                result), logInPacket.SenderEndPoint);
         }
 
-        private void UdpServer_SignUpRequestReceived(object sender, IPacket packet)
+        private void UdpServer_SignUpRequestReceived(object sender, PacketEventArgs e)
         {
-            Logger.Out("[UDP] Sign up request received by " + packet.SenderEndPoint.ToString());
-
-            var signUpPacket = (SignUpRequestPacket)packet;
+            var signUpPacket = (SignUpRequestPacket)e.Packet;
             byte result = ((RwAccountsManager)AccountsManager).CreateAccount(signUpPacket.Username,
                 signUpPacket.PasswordHash, signUpPacket.SenderEndPoint.Address);
 
+            Logger.Out("[UDP] Sign up request received by " + signUpPacket.SenderEndPoint.ToString());
+
             if (result == ErrorMessage.NO_ERROR)
                 Logger.Out("[STAT] Account sign up complete for username '" + signUpPacket.Username +
-                    "' from " + packet.SenderEndPoint.ToString() + ".");
+                    "' from " + signUpPacket.SenderEndPoint.ToString() + ".");
 
             UdpServer.Send(new SignUpResponsePacket(result == ErrorMessage.NO_ERROR, signUpPacket.Username, result),
-                packet.SenderEndPoint);
+                signUpPacket.SenderEndPoint);
         }
     }
 }
