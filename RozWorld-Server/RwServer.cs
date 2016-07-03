@@ -64,11 +64,21 @@ namespace Oddmatics.RozWorld.Server
         /// </summary>
         public static string DIRECTORY_PLUGINS = Directory.GetCurrentDirectory() + @"\plugins";
 
+
+        /// <summary>
+        /// The text file containing banned account names.
+        /// </summary>
+        public static string FILE_ACCOUNT_BANS = Directory.GetCurrentDirectory() + "\\namebans.txt";
         
         /// <summary>
         /// The config file for server variables.
         /// </summary>
-        public static string FILE_CONFIG = "server.cfg";
+        public static string FILE_CONFIG = Directory.GetCurrentDirectory() + "\\server.cfg";
+
+        /// <summary>
+        /// The text file containing banned ips.
+        /// </summary>
+        public static string FILE_IP_BANS = Directory.GetCurrentDirectory() + "\\ipbans.txt";
 
         #endregion
 
@@ -98,15 +108,20 @@ namespace Oddmatics.RozWorld.Server
         public IList<string> WhitelistedPlayers { get { return _WhitelistedPlayers.AsReadOnly(); } }
 
 
+        public event AccountSignUpEventHandler AccountSignUp;
         public event EventHandler FatalError;
         public event EventHandler Pause;
+        public event PlayerChatEventHandler PlayerChatting;
+        public event PlayerLogInEventHandler PlayerLogIn;
         public event EventHandler Started;
         public event EventHandler Starting;
         public event EventHandler Stopped;
         public event EventHandler Stopping;
-        public event EventHandler Tick;
+        public event ServerTickEventHandler Tick;
 
 
+        private IList<string> BannedAccountNames;
+        private IList<IPAddress> BannedIPs;
         private Dictionary<string, CommandSentCallback> Commands;
         private string[] CompatibleServerNames = new string[] { "vanilla", "*" };
         private ushort CompatibleVanillaVersion = 1;
@@ -311,6 +326,21 @@ namespace Oddmatics.RozWorld.Server
             FileSystem.MakeDirectory(DIRECTORY_PLAYERS);
             FileSystem.MakeDirectory(DIRECTORY_PLUGINS);
 
+            if (!File.Exists(FILE_ACCOUNT_BANS))
+                File.Create(FILE_ACCOUNT_BANS);
+            else
+            {
+                var accountNames = FileSystem.GetTextFile(FILE_ACCOUNT_BANS);
+
+                for (int i = accountNames.Count - 1; i >= 0; i--)
+                {
+                    if (!RwPlayer.ValidName(accountNames[i]))
+                        accountNames.RemoveAt(i);
+                }
+
+                BannedAccountNames = accountNames;
+            }
+
             Logger.Out("[STAT] Initialising systems...");
 
             AccountsManager = new RwAccountsManager();
@@ -324,12 +354,10 @@ namespace Oddmatics.RozWorld.Server
 
             Logger.Out("[STAT] Setting configs...");
 
-            string configPath = Directory.GetCurrentDirectory() + "\\" + FILE_CONFIG;
+            if (!File.Exists(FILE_CONFIG))
+                MakeDefaultConfigs(FILE_CONFIG);
 
-            if (!File.Exists(configPath))
-                MakeDefaultConfigs(configPath);
-
-            LoadConfigs(configPath);
+            LoadConfigs(FILE_CONFIG);
 
             Logger.Out("[STAT] Loading plugins...");
 
