@@ -120,8 +120,8 @@ namespace Oddmatics.RozWorld.Server
         public event ServerTickEventHandler Tick;
 
 
-        private IList<string> BannedAccountNames;
-        private IList<IPAddress> BannedIPs;
+        private List<string> BannedAccountNames;
+        private List<IPAddress> BannedIPs;
         private Dictionary<string, CommandSentCallback> Commands;
         private string[] CompatibleServerNames = new string[] { "vanilla", "*" };
         private ushort CompatibleVanillaVersion = 1;
@@ -326,19 +326,38 @@ namespace Oddmatics.RozWorld.Server
             FileSystem.MakeDirectory(DIRECTORY_PLAYERS);
             FileSystem.MakeDirectory(DIRECTORY_PLUGINS);
 
+            // Load bans
+            BannedAccountNames = new List<string>();
+            BannedIPs = new List<IPAddress>();
+
             if (!File.Exists(FILE_ACCOUNT_BANS))
                 File.Create(FILE_ACCOUNT_BANS);
             else
             {
                 var accountNames = FileSystem.GetTextFile(FILE_ACCOUNT_BANS);
 
-                for (int i = accountNames.Count - 1; i >= 0; i--)
+                foreach (string accountName in accountNames)
                 {
-                    if (!RwPlayer.ValidName(accountNames[i]))
-                        accountNames.RemoveAt(i);
+                    if (RwPlayer.ValidName(accountName) &&
+                        !BannedAccountNames.Contains(accountName))
+                        BannedAccountNames.Add(accountName);
                 }
+            }
 
-                BannedAccountNames = accountNames;
+            if (!File.Exists(FILE_IP_BANS))
+                File.Create(FILE_IP_BANS);
+            else
+            {
+                var ips = FileSystem.GetTextFile(FILE_IP_BANS);
+
+                foreach (string ipString in ips)
+                {
+                    IPAddress ip;
+
+                    if (IPAddress.TryParse(ipString, out ip) &&
+                        !BannedIPs.Contains(ip))
+                        BannedIPs.Add(ip);
+                }
             }
 
             Logger.Out("[STAT] Initialising systems...");
