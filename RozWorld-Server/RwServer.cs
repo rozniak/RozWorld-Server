@@ -518,7 +518,11 @@ namespace Oddmatics.RozWorld.Server
 
             Logger.Out("[UDP] Log in request received by " + logInPacket.SenderEndPoint.ToString());
 
-            if (logInPacket.ValidHashTime)
+            // Check bans
+            if (BannedIPs.Contains(logInPacket.SenderEndPoint.Address) ||
+                BannedAccountNames.Contains(logInPacket.Username))
+                result = ErrorMessage.BANNED;
+            else if (logInPacket.ValidHashTime)
             {
                 DateTime utcMidnight = DateTime.UtcNow.Date;
                 long utcHashTime = utcMidnight.Ticks + logInPacket.UtcHashTimeDifference;
@@ -536,14 +540,25 @@ namespace Oddmatics.RozWorld.Server
         private void UdpServer_SignUpRequestReceived(object sender, PacketEventArgs e)
         {
             var signUpPacket = (SignUpRequestPacket)e.Packet;
-            byte result = ((RwAccountsManager)AccountsManager).CreateAccount(signUpPacket.Username,
-                signUpPacket.PasswordHash, signUpPacket.SenderEndPoint.Address);
+            byte result;
+
+            // Check bans
+            if (BannedIPs.Contains(signUpPacket.SenderEndPoint.Address) ||
+                BannedAccountNames.Contains(signUpPacket.Username))
+                result = ErrorMessage.BANNED;
+            else
+                result = ((RwAccountsManager)AccountsManager).CreateAccount(signUpPacket.Username,
+                    signUpPacket.PasswordHash, signUpPacket.SenderEndPoint.Address);
 
             Logger.Out("[UDP] Sign up request received by " + signUpPacket.SenderEndPoint.ToString());
 
             if (result == ErrorMessage.NO_ERROR)
                 Logger.Out("[STAT] Account sign up complete for username '" + signUpPacket.Username +
                     "' from " + signUpPacket.SenderEndPoint.ToString() + ".");
+            else
+                Logger.Out("[STAT] Account sign up unsuccessful for username '" + signUpPacket.Username +
+                    "' from " + signUpPacket.SenderEndPoint.ToString() + " - Error " + result.ToString() +
+                    ".");
 
             UdpServer.Send(new SignUpResponsePacket(result == ErrorMessage.NO_ERROR, signUpPacket.Username, result),
                 signUpPacket.SenderEndPoint);
