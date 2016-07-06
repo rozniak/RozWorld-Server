@@ -338,7 +338,8 @@ namespace Oddmatics.RozWorld.Server
 
                 foreach (string accountName in accountNames)
                 {
-                    if (RwPlayer.ValidName(accountName) &&
+                    if (accountName != null &&
+                        RwPlayer.ValidName(accountName) &&
                         !BannedAccountNames.Contains(accountName))
                         BannedAccountNames.Add(accountName);
                 }
@@ -542,6 +543,8 @@ namespace Oddmatics.RozWorld.Server
             var signUpPacket = (SignUpRequestPacket)e.Packet;
             byte result;
 
+            Logger.Out("[UDP] Sign up request received by " + signUpPacket.SenderEndPoint.ToString());
+
             // Check bans
             if (BannedIPs.Contains(signUpPacket.SenderEndPoint.Address) ||
                 BannedAccountNames.Contains(signUpPacket.Username))
@@ -549,8 +552,6 @@ namespace Oddmatics.RozWorld.Server
             else
                 result = ((RwAccountsManager)AccountsManager).CreateAccount(signUpPacket.Username,
                     signUpPacket.PasswordHash, signUpPacket.SenderEndPoint.Address);
-
-            Logger.Out("[UDP] Sign up request received by " + signUpPacket.SenderEndPoint.ToString());
 
             if (result == ErrorMessage.NO_ERROR)
                 Logger.Out("[STAT] Account sign up complete for username '" + signUpPacket.Username +
