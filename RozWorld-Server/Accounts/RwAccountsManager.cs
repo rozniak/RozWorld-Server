@@ -11,6 +11,7 @@
 
 using Oddmatics.RozWorld.API.Generic;
 using Oddmatics.RozWorld.API.Server.Accounts;
+using Oddmatics.RozWorld.Formats;
 using Oddmatics.RozWorld.Net.Packets;
 using Oddmatics.RozWorld.Server.Entities;
 using Oddmatics.Util.IO;
@@ -31,49 +32,11 @@ namespace Oddmatics.RozWorld.Server.Accounts
             if (!RwPlayer.ValidName(name))
                 return ErrorMessage.ACCOUNT_NAME_INVALID;
 
-            string realName = name.ToLower();
+            if (AccountFile.Create(name, passwordHash, creatorIP,
+                RwServer.DIRECTORY_ACCOUNTS) == null)
+                return ErrorMessage.ACCOUNT_NAME_TAKEN;
 
-            if (Directory.GetFiles(RwServer.DIRECTORY_ACCOUNTS, realName + ".*.acc").Length == 0)
-            {
-                const byte maxAttempts = 4;
-                byte attempts = 0;
-                string finalDisplayName = String.Empty;
-                string underscores = String.Empty;
-
-                while (Directory.GetFiles(RwServer.DIRECTORY_ACCOUNTS, "*." + realName + underscores + ".acc")
-                    .Length > 0)
-                {
-                    if (++attempts > maxAttempts)
-                        return ErrorMessage.INTERNAL_ERROR;
-
-                    underscores += "_";
-                }
-
-                finalDisplayName = name + underscores;
-
-                var accountFile = new List<byte>();
-
-                /**
-                 * Set up account file as:
-                 *   [Account name]
-                 *   [Display name]
-                 *   [Password hash]
-                 *   [Creator's IP]
-                 *   [Last login IP] -- basically null here
-                 */
-                //accountFile.AddRange(name.GetBytesByLength(1));
-                //accountFile.AddRange(finalDisplayName.GetBytesByLength(2));
-                //accountFile.AddRange(passwordHash);
-                //accountFile.AddRange(creatorIP.ToString().GetBytesByLength(1));
-                //accountFile.AddRange(IPAddress.None.ToString().GetBytesByLength(1));
-
-                FileSystem.PutBinaryFile(RwServer.DIRECTORY_ACCOUNTS + @"\" + realName + "."
-                    + finalDisplayName.ToLower() + ".acc", accountFile.ToArray());
-
-                return ErrorMessage.NO_ERROR;
-            }
-
-            return ErrorMessage.ACCOUNT_NAME_TAKEN;
+            return ErrorMessage.NO_ERROR;
         }
 
         public bool DeleteAccount(string name)
@@ -88,7 +51,15 @@ namespace Oddmatics.RozWorld.Server.Accounts
 
         public IAccount GetAccount(string name)
         {
-            throw new System.NotImplementedException();
+            // TODO: Perform check to see if player with account is currently online
+
+            string accountName = name.ToLower();
+            string[] foundAccounts = Directory.GetFiles(RwServer.DIRECTORY_ACCOUNTS, accountName + ".*.acc");
+
+            if (foundAccounts.Length == 1)
+                return new RwAccount(foundAccounts[0]);
+
+            return null;
         }
 
         public bool RenameAccount(IAccount account, string newName)

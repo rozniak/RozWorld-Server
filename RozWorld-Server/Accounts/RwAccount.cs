@@ -13,6 +13,7 @@ using Oddmatics.RozWorld.API.Generic;
 using Oddmatics.RozWorld.API.Server.Accounts;
 using Oddmatics.RozWorld.API.Server.Entities;
 using Oddmatics.RozWorld.API.Server.Game;
+using Oddmatics.RozWorld.Formats;
 using Oddmatics.RozWorld.Net.Packets;
 using Oddmatics.RozWorld.Server.Entities;
 using Oddmatics.Util.IO;
@@ -31,13 +32,31 @@ namespace Oddmatics.RozWorld.Server.Accounts
         {
             get { throw new NotImplementedException(); }
         }
-        public DateTime CreationDate { get; private set; }
-        public IPAddress CreationIP { get; private set; }
-        public IPAddress CurrentIP { get; private set; }
-        public string DisplayName { get; set; }
-        public IPAddress LastLoginIP { get; private set; }
+        public DateTime CreationDate
+        {
+            get { if (IsServer) return new DateTime(); else return AccountFile.CreationDate; }
+        }
+        public IPAddress CreationIP
+        {
+            get { if (IsServer) return IPAddress.Loopback; else return AccountFile.CreationIP; }
+        }
+        public IPAddress CurrentIP;
+        public string DisplayName
+        {
+            get { if (IsServer) return "server"; else return AccountFile.DisplayName; }
+            set
+            {
+                if (IsServer)
+                    throw new InvalidOperationException("RwAccount.DisplayName.Set: Cannot set server account's display name.");
+                else { }
+            }
+        }
+        public IPAddress LastLoginIP
+        {
+            get { if (IsServer) return IPAddress.Loopback; else return AccountFile.LastLogInIP; }
+        }
         public bool IsPlayer { get { return PlayerInstance != null; } }
-        public bool IsServer { get { return Username == "server"; } }
+        public bool IsServer { get; private set; }
         public IPermissionGroup PermissionGroup { get; private set; }
         public IList<string> Permissions
         {
@@ -53,45 +72,33 @@ namespace Oddmatics.RozWorld.Server.Accounts
             }
         }
         public Player PlayerInstance { get; private set; }
-        public string Username { get; private set; }
+        public string Username { get { if (IsServer) return "server"; else return AccountFile.Username; } }
 
 
+        private AccountFile AccountFile;
         public bool LoggedIn { get; private set; }
-        private IList<byte> PasswordHash;
         private Dictionary<string, PermissionState> PermissionStates;
-        public bool Valid { get; private set; }
+        public static bool ServerAccountCreated { get; private set; }
 
 
-        public RwAccount(string username)
+        public RwAccount(string accountPath)
         {
-            string realUsername = username.ToLower();
+            if (accountPath.ToLower() == "server")
+            {
+                if (ServerAccountCreated)
+                    throw new ArgumentException("RwAccount.New: Cannot create server account, one has already been made.");
 
-            if (realUsername == "server")
-                Username = realUsername;
+                IsServer = true;
+                LoggedIn = true;
+            }
             else
             {
-                //string[] accountFiles = Directory.GetFiles(RwServer.DIRECTORY_ACCOUNTS, realUsername + ".*.acc");
-
-                //if (accountFiles.Length == 1)
-                //{
-                //    // Load bytes into a List<byte> collection so .GetRange() can be used
-                //    var accountFile = new List<byte>(FileSystem.GetBinaryFile(accountFiles[0]));
-
-                //    int currentIndex = 0;
-                //    Username = ByteParse.NextStringByLength(accountFile, ref currentIndex, 1);
-                //    DisplayName = ByteParse.NextStringByLength(accountFile, ref currentIndex, 2);
-                //    PasswordHash = accountFile.GetRange(currentIndex, 32).AsReadOnly();
-                //    currentIndex += 32;
-
-                //    IPAddress creationIP = IPAddress.None;
-                //    IPAddress lastIP = IPAddress.None;
-                //    bool validIPs = 
-                //        IPAddress.TryParse(ByteParse.NextStringByLength(accountFile, ref currentIndex, 1), out creationIP) &&
-                //        IPAddress.TryParse(ByteParse.NextStringByLength(accountFile, ref currentIndex, 1), out lastIP);
-
-                //    CreationIP = creationIP;
-                //    LastLoginIP = lastIP;
-                //}
+                AccountFile = new AccountFile(accountPath);
+                IsServer = false;
+                PermissionGroup = RwCore.Server.PermissionAuthority
+                    .GetGroup(RwCore.Server.PermissionAuthority.DefaultGroupName);
+                PermissionStates = new Dictionary<string, PermissionState>(); // TODO: load this
+                LoggedIn = false;
             }
         }
 
@@ -131,20 +138,16 @@ namespace Oddmatics.RozWorld.Server.Accounts
 
         public byte LogIn(byte[] passwordHash, long utcHashTime)
         {
-            if (!Valid) // Username invalid since account isn't loaded
-                return ErrorMessage.INCORRECT_LOGIN;
-
             if (LoggedIn)
                 return ErrorMessage.INTERNAL_ERROR; // Should not happen
 
-            var saltedPass = new List<byte>(PasswordHash);
+            var saltedPass = new List<byte>(AccountFile.PasswordHash);
             saltedPass.AddRange(utcHashTime.GetBytes());
 
             byte[] comparisonHash = new SHA256Managed().ComputeHash(saltedPass.ToArray());
 
             if (comparisonHash.SequenceEqual(passwordHash))
             {
-                PasswordHash = null;
                 LoggedIn = true;
                 return ErrorMessage.NO_ERROR;
             }
