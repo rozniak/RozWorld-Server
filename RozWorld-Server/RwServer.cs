@@ -530,6 +530,13 @@ namespace Oddmatics.RozWorld.Server
 
                 var account = new RwAccount(logInPacket.Username);
                 result = account.LogIn(logInPacket.PasswordHash, utcHashTime);
+
+                if (result == ErrorMessage.NO_ERROR)
+                {
+                    // TODO: Do some stuff with online players here
+                    // For now...
+                    RwPlayer player = account.InstatePlayerInstance();
+                }
             }
             else
                 result = ErrorMessage.HASHTIME_INVALID;

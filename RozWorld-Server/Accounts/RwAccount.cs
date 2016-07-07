@@ -136,6 +136,16 @@ namespace Oddmatics.RozWorld.Server.Accounts
             }
         }
 
+        public RwPlayer InstatePlayerInstance()
+        {
+            if (!LoggedIn)
+                return null;
+
+            PlayerInstance = new RwPlayer(this);
+
+            return (RwPlayer)PlayerInstance;
+        }
+
         public byte LogIn(byte[] passwordHash, long utcHashTime)
         {
             if (LoggedIn)

@@ -11,6 +11,7 @@
 
 using Oddmatics.RozWorld.API.Server.Item;
 using Oddmatics.RozWorld.API.Server.Entities;
+using Oddmatics.RozWorld.Server.Accounts;
 using System;
 using System.Text.RegularExpressions;
 
@@ -19,9 +20,27 @@ namespace Oddmatics.RozWorld.Server.Entities
     public class RwPlayer : Player
     {
         public override bool AFK { get; set; }
-        public override string DisplayName { get; set; }
+        private string _DisplayName; // For bots only
+        public override string DisplayName
+        {
+            get
+            {
+                if (IsRealPlayer)
+                    return Account.DisplayName;
+                else
+                    return _DisplayName;
+            }
+
+            set // TODO: add some verif on value!!
+            {
+                if (IsRealPlayer)
+                    Account.DisplayName = value;
+                else
+                    _DisplayName = value;
+            }
+        }
         public override IInventory Inventory { get; set; }
-        public override bool IsControllable { get { return false; } } // For the sake of building rn
+        public override bool IsControllable { get { return IsRealPlayer; } } // For the sake of building rn
         public override bool IsFreezable { get { return true; } }
         public override bool IsFlammable { get { return true; } }
         public override int Mass { get { return 0; } } // TODO: decide this mass much later on
@@ -34,9 +53,32 @@ namespace Oddmatics.RozWorld.Server.Entities
         public override bool VisibleOnScoreboard { get; set; }
 
 
-        public RwPlayer(string name)
-        {
+        public readonly RwAccount Account;
 
+
+        public RwPlayer(RwAccount account)
+        {
+            if (account.IsServer)
+                throw new ArgumentException("RwPlayer.New: Cannot create a player instance for the server account.");
+
+            Account = account;
+            IsRealPlayer = true;
+            AFK = false;
+            Joinable = false;
+            Status = String.Empty;
+            Visibility = 255;
+            VisibleOnScoreboard = true;
+
+            // TODO: Load inventory, location, item in hand etc.
+        }
+
+        public RwPlayer(string botName)
+        {
+            // TODO: Create a bot
+            IsRealPlayer = false;
+            Status = String.Empty;
+            Visibility = 255;
+            VisibleOnScoreboard = false;
         }
 
 
