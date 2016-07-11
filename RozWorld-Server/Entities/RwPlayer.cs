@@ -11,6 +11,7 @@
 
 using Oddmatics.RozWorld.API.Server.Item;
 using Oddmatics.RozWorld.API.Server.Entities;
+using Oddmatics.RozWorld.Net.Server;
 using Oddmatics.RozWorld.Server.Accounts;
 using System;
 using System.Text.RegularExpressions;
@@ -54,14 +55,19 @@ namespace Oddmatics.RozWorld.Server.Entities
 
 
         public readonly RwAccount Account;
+        private ConnectedClient Client;
 
 
-        public RwPlayer(RwAccount account)
+        public RwPlayer(RwAccount account, ConnectedClient client)
         {
             if (account.IsServer)
                 throw new ArgumentException("RwPlayer.New: Cannot create a player instance for the server account.");
 
+            if (client == null)
+                throw new ArgumentNullException("RwPlayer.New: Client cannot be null.");
+
             Account = account;
+            Client = client;
             IsRealPlayer = true;
             AFK = false;
             Joinable = false;

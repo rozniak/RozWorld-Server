@@ -15,6 +15,7 @@ using Oddmatics.RozWorld.API.Server.Entities;
 using Oddmatics.RozWorld.API.Server.Game;
 using Oddmatics.RozWorld.Formats;
 using Oddmatics.RozWorld.Net.Packets;
+using Oddmatics.RozWorld.Net.Server;
 using Oddmatics.RozWorld.Server.Entities;
 using Oddmatics.Util.IO;
 using System;
@@ -136,12 +137,15 @@ namespace Oddmatics.RozWorld.Server.Accounts
             }
         }
 
-        public RwPlayer InstatePlayerInstance()
+        public RwPlayer InstatePlayerInstance(ConnectedClient client)
         {
             if (!LoggedIn)
                 return null;
 
-            PlayerInstance = new RwPlayer(this);
+            if (client == null)
+                throw new ArgumentNullException("RwAccount.InstatePlayerInstance: Client cannot be null.");
+
+            PlayerInstance = new RwPlayer(this, client);
 
             return (RwPlayer)PlayerInstance;
         }

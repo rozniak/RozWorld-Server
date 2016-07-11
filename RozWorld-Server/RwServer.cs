@@ -534,8 +534,9 @@ namespace Oddmatics.RozWorld.Server
                 if (result == ErrorMessage.NO_ERROR)
                 {
                     // TODO: Do some stuff with online players here
-                    // For now...
-                    RwPlayer player = account.InstatePlayerInstance();
+                    
+                    // Commented out since needs connected clients handling
+                    //RwPlayer player = account.InstatePlayerInstance();
                 }
             }
             else
