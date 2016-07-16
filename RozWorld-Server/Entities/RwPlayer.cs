@@ -9,9 +9,11 @@
  * Sharing, editing and general licence term information can be found inside of the "LICENCE.MD" file that should be located in the root of this project's directory structure.
  */
 
+using Oddmatics.RozWorld.API.Generic;
 using Oddmatics.RozWorld.API.Server.Accounts;
 using Oddmatics.RozWorld.API.Server.Item;
 using Oddmatics.RozWorld.API.Server.Entities;
+using Oddmatics.RozWorld.Net.Packets;
 using Oddmatics.RozWorld.Net.Server;
 using Oddmatics.RozWorld.Server.Accounts;
 using System;
@@ -99,17 +101,24 @@ namespace Oddmatics.RozWorld.Server.Entities
             throw new NotImplementedException();
         }
 
+        public bool Disconnect(byte reason)
+        {
+            // Perform any checks necessary... this may not always work in future!
+
+            Client.SendPacket(new DisconnectActionPacket(reason, Client.NextAckId));
+
+            return true;
+        }
+
         public override bool HasPermission(string key)
         {
             return false;
         }
 
-        public override void Kick(string reason = "")
+        public override bool Kick(string reason = "")
         {
-            throw new NotImplementedException();
+            return ((RwServer)RwCore.Server).Kick(this, reason);
         }
-
-        
 
         public override void SendInviteTo(Player recipient)
         {

@@ -164,15 +164,25 @@ namespace Oddmatics.RozWorld.Server
 
         public Player GetPlayer(string name)
         {
-            return null; // TODO: code this
+            if (AccountNameFromDisplay.ContainsKey(name.ToLower()))
+            {
+                string accountName = AccountNameFromDisplay[name.ToLower()].ToLower();
+
+                if (OnlineRealPlayers.ContainsKey(accountName))
+                    return OnlineRealPlayers[accountName];
+
+                if (OnlineBotPlayers.ContainsKey(accountName))
+                    return OnlineBotPlayers[accountName];
+
+                // If the key isn't found, there's a syncing error
+                // (Account name recorded, yet the player isn't on the server)
+                AccountNameFromDisplay.Remove(name.ToLower());
+            }
+
+            return null;
         }
 
         public Player GetPlayerAbsolute(string name)
-        {
-            return null; // TODO: code this
-        }
-
-        public Player GetPlayerByDisplayName(string name)
         {
             return null; // TODO: code this
         }
@@ -185,6 +195,22 @@ namespace Oddmatics.RozWorld.Server
         public bool IsValidEntity(ushort id)
         {
             return false; // TODO: code this
+        }
+
+        public bool Kick(Player player, string reason = "")
+        {
+            if (player != null)
+            {
+                ((RwPlayer)player).Disconnect(DisconnectReason.KICKED);
+                return true;
+            }
+
+            return false;
+        }
+
+        public bool Kick(string name, string reason = "")
+        {
+            return Kick(GetPlayer(name), reason);
         }
 
         private void LoadConfigs(string configFile)
@@ -537,9 +563,11 @@ namespace Oddmatics.RozWorld.Server
                 result = ErrorMessage.BANNED;
             else if (logInPacket.ValidHashTime)
             {
+                // TODO: Revise a LOT of this code to work with both bots and real users :)
+
                 // Check if there's already a user logged in, kick them if they are
-                if (OnlineRealPlayers.ContainsKey(logInPacket.Username))
-                    OnlineRealPlayers[logInPacket.Username].Kick("Another player has logged into this account on this server.");
+                if (AccountNameFromDisplay.ContainsValue(logInPacket.Username))
+                    Kick(GetPlayer(logInPacket.Username), "Another player has logged into this account on this server.");
 
                 DateTime utcMidnight = DateTime.UtcNow.Date;
                 long utcHashTime = utcMidnight.Ticks + logInPacket.UtcHashTimeDifference;
@@ -556,8 +584,8 @@ namespace Oddmatics.RozWorld.Server
                     {
                         // Add the player to the list and update dictionaries
                         RwPlayer player = account.InstatePlayerInstance(client);
-                        OnlineRealPlayers.Add(player.Account.Username, player);
-                        AccountNameFromDisplay.Add(player.DisplayName, player.Account.Username);
+                        OnlineRealPlayers.Add(player.Account.Username.ToLower(), player);
+                        AccountNameFromDisplay.Add(player.DisplayName.ToLower(), player.Account.Username.ToLower());
                     }
                     else
                     {
