@@ -545,10 +545,22 @@ namespace Oddmatics.RozWorld.Server
 
                 if (result == ErrorMessage.NO_ERROR)
                 {
-                    // TODO: Do some stuff with online players here
-                    
-                    // Commented out since needs connected clients handling
-                    //RwPlayer player = account.InstatePlayerInstance();
+                    UdpServer.AddClient(logInPacket.SenderEndPoint); // Attempt to add the client
+                    ConnectedClient client = UdpServer.GetConnectedClient(logInPacket.SenderEndPoint);
+
+                    if (client != null) // Everything was successful
+                    {
+                        // Add the player to the list and update dictionaries
+                        RwPlayer player = account.InstatePlayerInstance(client);
+                        OnlineRealPlayers.Add(player.Account.Username, player);
+                        AccountNameFromDisplay.Add(player.DisplayName, player.Account.Username);
+                    }
+                    else
+                    {
+                        // Something odd happened
+                        Logger.Out("[ERR] Something strange occurred during log in, connected client instance could not be instated.");
+                        result = ErrorMessage.INTERNAL_ERROR; // Update error message since it was a failure
+                    }
                 }
             }
             else

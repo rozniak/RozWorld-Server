@@ -9,6 +9,7 @@
  * Sharing, editing and general licence term information can be found inside of the "LICENCE.MD" file that should be located in the root of this project's directory structure.
  */
 
+using Oddmatics.RozWorld.API.Server.Accounts;
 using Oddmatics.RozWorld.API.Server.Item;
 using Oddmatics.RozWorld.API.Server.Entities;
 using Oddmatics.RozWorld.Net.Server;
@@ -20,6 +21,7 @@ namespace Oddmatics.RozWorld.Server.Entities
 {
     public class RwPlayer : Player
     {
+        public override IAccount Account { get; protected set; }
         public override bool AFK { get; set; }
         private string _DisplayName; // For bots only
         public override string DisplayName
@@ -54,7 +56,6 @@ namespace Oddmatics.RozWorld.Server.Entities
         public override bool VisibleOnScoreboard { get; set; }
 
 
-        public readonly RwAccount Account;
         private ConnectedClient Client;
 
 
