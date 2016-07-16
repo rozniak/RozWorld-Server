@@ -94,7 +94,16 @@ namespace Oddmatics.RozWorld.Server
         private ILogger _Logger;
         public ILogger Logger { get { return _Logger; } set { _Logger = _Logger == null ? value : _Logger; } }
         public short MaxPlayers { get; private set; }
-        public IList<Player> OnlinePlayers { get { return new List<Player>().AsReadOnly(); } }
+        public IList<Player> OnlinePlayers
+        {
+            get
+            {
+                var allPlayers = new List<Player>();
+                allPlayers.AddRange(OnlineBotPlayers.Values);
+                allPlayers.AddRange(OnlineRealPlayers.Values);
+                return allPlayers.AsReadOnly();
+            }
+        }
         public IPermissionAuthority PermissionAuthority { get; private set; }
         private List<IPlugin> _Plugins;
         public IList<IPlugin> Plugins { get { return _Plugins.AsReadOnly(); } }
@@ -120,6 +129,7 @@ namespace Oddmatics.RozWorld.Server
         public event ServerTickEventHandler Tick;
 
 
+        private Dictionary<string, string> AccountNameFromDisplay;
         private List<string> BannedAccountNames;
         private List<IPAddress> BannedIPs;
         private Dictionary<string, CommandSentCallback> Commands;
@@ -127,6 +137,8 @@ namespace Oddmatics.RozWorld.Server
         private ushort CompatibleVanillaVersion = 1;
         public string CurrentPluginLoading { get; private set; }
         public bool HasStarted { get; private set; }
+        private Dictionary<string, RwPlayer> OnlineRealPlayers;
+        private Dictionary<string, RwPlayer> OnlineBotPlayers;
         public RwAccount ServerAccount { get; private set; }
         private string SpawnWorldGenerator = String.Empty;
         private string SpawnWorldGeneratorOptions = String.Empty;
