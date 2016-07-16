@@ -537,6 +537,10 @@ namespace Oddmatics.RozWorld.Server
                 result = ErrorMessage.BANNED;
             else if (logInPacket.ValidHashTime)
             {
+                // Check if there's already a user logged in, kick them if they are
+                if (OnlineRealPlayers.ContainsKey(logInPacket.Username))
+                    OnlineRealPlayers[logInPacket.Username].Kick("Another player has logged into this account on this server.");
+
                 DateTime utcMidnight = DateTime.UtcNow.Date;
                 long utcHashTime = utcMidnight.Ticks + logInPacket.UtcHashTimeDifference;
 
