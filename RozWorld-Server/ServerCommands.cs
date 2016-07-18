@@ -10,6 +10,7 @@
  */
 
 using Oddmatics.RozWorld.API.Generic;
+using Oddmatics.RozWorld.API.Generic.Chat;
 using Oddmatics.RozWorld.API.Server.Accounts;
 using Oddmatics.RozWorld.API.Server.Event;
 using System;
@@ -19,6 +20,10 @@ namespace Oddmatics.RozWorld.Server
 {
     static class ServerCommands
     {
+        private const string ERROR_INVALID_ARGS_LENGTH = "Invalid amount of arguments passed for ";
+        private const string ERROR_INVALID_PERMISSIONS = "You do not have permission to execute command ";
+
+
         private static bool Registered = false;
 
 
@@ -31,6 +36,13 @@ namespace Oddmatics.RozWorld.Server
             {
                 if (!Registered)
                 {
+                    // All commands
+                    RwCore.Server.PermissionAuthority.RegisterPermission("rwcore.*", "Full RozWorld base permissions.");
+
+                    // Command /kick
+                    RwCore.Server.PermissionAuthority.RegisterPermission("rwcore.kick", "Kick players from the server.");
+                    RwCore.Server.RegisterCommand("kick", ServerKick);
+
                     // Command /say
                     RwCore.Server.PermissionAuthority.RegisterPermission("rwcore.say.*", "Full talking permissions");
                     RwCore.Server.PermissionAuthority.RegisterPermission("rwcore.say.self", "Talk in game chat.");
@@ -42,12 +54,53 @@ namespace Oddmatics.RozWorld.Server
                     RwCore.Server.RegisterCommand("stop", ServerStop);
                 }
                 else
-                    throw new InvalidOperationException("Commands have already been registered.");
+                    throw new InvalidOperationException("ServerCommands.Register: Commands have already been registered.");
             }
             else
-                throw new InvalidOperationException("Cannot register commands while the server is null.");
+                throw new InvalidOperationException("ServerCommands.Register: Cannot register commands while the server is null.");
         }
 
+
+        /// <summary>
+        /// [Command Callback] Handles the /kick command.
+        /// </summary>
+        private static bool ServerKick(IAccount sender, IList<string> args)
+        {
+            const string cmdName = "/kick";
+
+            if (sender.HasPermission("rwcore.*") || sender.HasPermission("rwcore.kick"))
+            {
+                if (args.Count == 0)
+                {
+                    sender.PlayerInstance.SendMessage(ChatColour.RED + ERROR_INVALID_ARGS_LENGTH + cmdName);
+                    return false;
+                }
+
+                string reason = String.Empty;
+
+                if (args.Count > 1)
+                {
+                    for (int i = 1; i < args.Count; i++)
+                    {
+                        reason += args[i];
+
+                        if (i < args.Count - 1)
+                            reason += " ";
+                    }
+                }
+
+                if (!RwCore.Server.Kick(args[0], reason)) // Try to kick, if unsuccessful then the player didn't exist
+                {
+                    sender.PlayerInstance.SendMessage(ChatColour.RED + "Invalid player specified to kick.");
+                    return false;
+                }
+
+                return true;
+            }
+
+            sender.PlayerInstance.SendMessage(ChatColour.RED + ERROR_INVALID_PERMISSIONS + cmdName);
+            return false;
+        }
 
         /// <summary>
         /// [Command Callback] Handles the /say command.

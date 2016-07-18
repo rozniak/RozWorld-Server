@@ -103,9 +103,9 @@ namespace Oddmatics.RozWorld.Server.Entities
 
         public bool Disconnect(byte reason)
         {
-            // Perform any checks necessary... this may not always work in future!
-
-            Client.SendPacket(new DisconnectActionPacket(reason, Client.NextAckId));
+            // If this is a real player, send the disconnect packet, otherwise continue as normal
+            if (IsRealPlayer)
+                Client.SendPacket(new DisconnectActionPacket(reason, Client.NextAckId));
 
             return true;
         }
