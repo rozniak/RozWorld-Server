@@ -62,6 +62,10 @@ namespace Oddmatics.RozWorld.Server
                     RwCore.Server.PermissionAuthority.RegisterPermission("rwcore.say.server", "Talk in game chat as the server.");
                     RwCore.Server.RegisterCommand("say", ServerSay);
 
+                    // Command /slap
+                    RwCore.Server.PermissionAuthority.RegisterPermission("rwcore.slap", "Slaps a player.");
+                    RwCore.Server.RegisterCommand("slap", ServerSlap);
+
                     // Command /stop
                     RwCore.Server.PermissionAuthority.RegisterPermission("rwcore.stop", "Stops the server.");
                     RwCore.Server.RegisterCommand("stop", ServerStop);
@@ -234,6 +238,39 @@ namespace Oddmatics.RozWorld.Server
                 }
 
                 RwCore.Server.BroadcastMessage(message);
+
+                return true;
+            }
+
+            sender.PlayerInstance.SendMessage(ChatColour.RED + ERROR_INVALID_PERMISSIONS + cmdName + ".");
+            return false;
+        }
+
+        /// <summary>
+        /// [Command Callback] Handles the /slap command.
+        /// </summary>
+        private static bool ServerSlap(IAccount sender, IList<string> args)
+        {
+            const string cmdName = "/slap";
+
+            if (sender.HasPermission("rwcore.*") || sender.HasPermission("rwcore.slap"))
+            {
+                if (args.Count != 1)
+                {
+                    sender.PlayerInstance.SendMessage(ChatColour.RED + ERROR_INVALID_ARGS_LENGTH + cmdName + ".");
+                    return false;
+                }
+
+                Player targetPlayer = RwCore.Server.GetPlayer(args[0]);
+
+                if (targetPlayer == null)
+                {
+                    sender.PlayerInstance.SendMessage(ChatColour.RED + "You can't slap someone that isn't here!");
+                    return false;
+                }
+
+                RwCore.Server.BroadcastMessage(ChatColour.ORANGE + " *" + sender.DisplayName + " slaps " +
+                    targetPlayer.DisplayName + " with a large eel.");
 
                 return true;
             }
