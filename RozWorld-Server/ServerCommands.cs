@@ -15,6 +15,7 @@ using Oddmatics.RozWorld.API.Server.Accounts;
 using Oddmatics.RozWorld.API.Server.Event;
 using System;
 using System.Collections.Generic;
+using Oddmatics.RozWorld.API.Server.Entities;
 
 namespace Oddmatics.RozWorld.Server
 {
@@ -42,6 +43,10 @@ namespace Oddmatics.RozWorld.Server
                     // Command /kick
                     RwCore.Server.PermissionAuthority.RegisterPermission("rwcore.kick", "Kick players from the server.");
                     RwCore.Server.RegisterCommand("kick", ServerKick);
+
+                    // Command /list
+                    RwCore.Server.PermissionAuthority.RegisterPermission("rwcore.list", "Lists all players currently online.");
+                    RwCore.Server.RegisterCommand("list", ServerList);
 
                     // Command /say
                     RwCore.Server.PermissionAuthority.RegisterPermission("rwcore.say.*", "Full talking permissions");
@@ -72,7 +77,7 @@ namespace Oddmatics.RozWorld.Server
             {
                 if (args.Count == 0)
                 {
-                    sender.PlayerInstance.SendMessage(ChatColour.RED + ERROR_INVALID_ARGS_LENGTH + cmdName);
+                    sender.PlayerInstance.SendMessage(ChatColour.RED + ERROR_INVALID_ARGS_LENGTH + cmdName + ".");
                     return false;
                 }
 
@@ -98,7 +103,36 @@ namespace Oddmatics.RozWorld.Server
                 return true;
             }
 
-            sender.PlayerInstance.SendMessage(ChatColour.RED + ERROR_INVALID_PERMISSIONS + cmdName);
+            sender.PlayerInstance.SendMessage(ChatColour.RED + ERROR_INVALID_PERMISSIONS + cmdName + ".");
+            return false;
+        }
+
+        /// <summary>
+        /// [Command Callback] Handles the /list command.
+        /// </summary>
+        private static bool ServerList(IAccount sender, IList<string> args)
+        {
+            const string cmdName = "/list";
+
+            if (sender.HasPermission("rwcore.*") || sender.HasPermission("rwcore.list"))
+            {
+                IList<Player> onlinePlayers = RwCore.Server.OnlinePlayers;
+
+                string playerList = String.Empty;
+
+                for (int i = 0; i < onlinePlayers.Count; i++)
+                {
+                    playerList += onlinePlayers[i].DisplayName;
+
+                    if (i < onlinePlayers.Count - 1)
+                        playerList += ", ";
+                }
+
+                sender.PlayerInstance.SendMessage(onlinePlayers.Count.ToString() + " currently online players:");
+                sender.PlayerInstance.SendMessage(playerList + ".");
+            }
+
+            sender.PlayerInstance.SendMessage(ChatColour.RED + ERROR_INVALID_PERMISSIONS + cmdName + ".");
             return false;
         }
 
@@ -107,8 +141,17 @@ namespace Oddmatics.RozWorld.Server
         /// </summary>
         private static bool ServerSay(IAccount sender, IList<string> args)
         {
-            if (sender.HasPermission("rwcore.say.server"))
+            const string cmdName = "/say";
+
+            if (sender.HasPermission("rwcore.*") || sender.HasPermission("rwcore.say.*") ||
+                sender.HasPermission("rwcore.say.server"))
             {
+                if (args.Count == 0)
+                {
+                    sender.PlayerInstance.SendMessage(ChatColour.RED + ERROR_INVALID_ARGS_LENGTH + cmdName + ".");
+                    return false;
+                }
+
                 string message = "<Server>";
 
                 foreach (string arg in args)
@@ -121,6 +164,7 @@ namespace Oddmatics.RozWorld.Server
                 return true;
             }
 
+            sender.PlayerInstance.SendMessage(ChatColour.RED + ERROR_INVALID_PERMISSIONS + cmdName + ".");
             return false;
         }
 
@@ -129,9 +173,12 @@ namespace Oddmatics.RozWorld.Server
         /// </summary>
         private static bool ServerStop(IAccount sender, IList<string> args)
         {
-            if (sender.HasPermission("rwcore.stop"))
+            const string cmdName = "/stop";
+
+            if (sender.HasPermission("rwcore.*") || sender.HasPermission("rwcore.stop"))
                 ((RwServer)RwCore.Server).Stop();
 
+            sender.PlayerInstance.SendMessage(ChatColour.RED + ERROR_INVALID_PERMISSIONS + cmdName + ".");
             return false;
         }
     }
