@@ -45,7 +45,8 @@ namespace Oddmatics.RozWorld.Server
                     RwCore.Server.RegisterCommand("kick", ServerKick);
 
                     // Command /list
-                    RwCore.Server.PermissionAuthority.RegisterPermission("rwcore.list", "Lists all players currently online.");
+                    RwCore.Server.PermissionAuthority.RegisterPermission("rwcore.list", "Lists all visible players currently online.");
+                    RwCore.Server.PermissionAuthority.RegisterPermission("rwcore.list.all", "Lists everyone online regardless of visibility.");
                     RwCore.Server.RegisterCommand("list", ServerList);
 
                     // Command /me
@@ -134,7 +135,32 @@ namespace Oddmatics.RozWorld.Server
 
                 for (int i = 0; i < onlinePlayers.Count; i++)
                 {
-                    playerList += onlinePlayers[i].DisplayName;
+                    Player foundPlayer = onlinePlayers[i];
+                    string fullDisplayName = String.Empty;
+
+                    if (sender.HasPermission("rwcore.list.detail"))
+                    {
+                        if (!foundPlayer.IsRealPlayer) // Player is a bot
+                            fullDisplayName += "B|";
+
+                        if (!foundPlayer.IsValid) // Player is chat-only
+                            fullDisplayName += "C|";
+
+                        if (!foundPlayer.VisibleOnScoreboard)
+                            fullDisplayName += "I|";
+
+                        fullDisplayName += foundPlayer.DisplayName;
+
+                        if (foundPlayer.Joinable)
+                            fullDisplayName += "*";
+
+                        if (foundPlayer.AFK)
+                            fullDisplayName += "(AFK)";
+                    }
+                    else
+                        fullDisplayName = foundPlayer.DisplayName;
+
+                    playerList += fullDisplayName;
 
                     if (i < onlinePlayers.Count - 1)
                         playerList += ", ";
