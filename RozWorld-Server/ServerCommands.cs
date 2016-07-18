@@ -12,10 +12,10 @@
 using Oddmatics.RozWorld.API.Generic;
 using Oddmatics.RozWorld.API.Generic.Chat;
 using Oddmatics.RozWorld.API.Server.Accounts;
+using Oddmatics.RozWorld.API.Server.Entities;
 using Oddmatics.RozWorld.API.Server.Event;
 using System;
 using System.Collections.Generic;
-using Oddmatics.RozWorld.API.Server.Entities;
 
 namespace Oddmatics.RozWorld.Server
 {
@@ -47,6 +47,10 @@ namespace Oddmatics.RozWorld.Server
                     // Command /list
                     RwCore.Server.PermissionAuthority.RegisterPermission("rwcore.list", "Lists all players currently online.");
                     RwCore.Server.RegisterCommand("list", ServerList);
+
+                    // Command /msg
+                    RwCore.Server.PermissionAuthority.RegisterPermission("rwcore.msg", "Send a private message to a player.");
+                    RwCore.Server.RegisterCommand("msg", ServerPrivateMessage);
 
                     // Command /say
                     RwCore.Server.PermissionAuthority.RegisterPermission("rwcore.say.*", "Full talking permissions");
@@ -130,6 +134,41 @@ namespace Oddmatics.RozWorld.Server
 
                 sender.PlayerInstance.SendMessage(onlinePlayers.Count.ToString() + " currently online players:");
                 sender.PlayerInstance.SendMessage(playerList + ".");
+            }
+
+            sender.PlayerInstance.SendMessage(ChatColour.RED + ERROR_INVALID_PERMISSIONS + cmdName + ".");
+            return false;
+        }
+
+        /// <summary>
+        /// [Command Callback] Handles the /msg command.
+        /// </summary>
+        private static bool ServerPrivateMessage(IAccount sender, IList<string> args)
+        {
+            const string cmdName = "/msg";
+
+            if (sender.HasPermission("rwcore.*") || sender.HasPermission("rwcore.msg"))
+            {
+                if (args.Count <= 1)
+                {
+                    sender.PlayerInstance.SendMessage(ChatColour.RED + ERROR_INVALID_ARGS_LENGTH + cmdName + ".");
+                    return false;
+                }
+
+                string message = String.Empty;
+                Player targetPlayer = RwCore.Server.GetPlayerAbsolute(args[0]);
+
+                for (int i = 1; i <= args.Count; i++)
+                {
+                    message += args[i];
+
+                    if (i < args.Count - 1)
+                        message += " ";
+                }
+
+                sender.PlayerInstance.SendPrivateMessageTo(message, targetPlayer);
+
+                return true;
             }
 
             sender.PlayerInstance.SendMessage(ChatColour.RED + ERROR_INVALID_PERMISSIONS + cmdName + ".");
