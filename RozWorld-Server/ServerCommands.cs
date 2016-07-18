@@ -48,6 +48,10 @@ namespace Oddmatics.RozWorld.Server
                     RwCore.Server.PermissionAuthority.RegisterPermission("rwcore.list", "Lists all players currently online.");
                     RwCore.Server.RegisterCommand("list", ServerList);
 
+                    // Command /me
+                    RwCore.Server.PermissionAuthority.RegisterPermission("rwcore.me", "Enacts an action in the game chat.");
+                    RwCore.Server.RegisterCommand("me", ServerMe);
+
                     // Command /msg
                     RwCore.Server.PermissionAuthority.RegisterPermission("rwcore.msg", "Send a private message to a player.");
                     RwCore.Server.RegisterCommand("msg", ServerPrivateMessage);
@@ -134,6 +138,37 @@ namespace Oddmatics.RozWorld.Server
 
                 sender.PlayerInstance.SendMessage(onlinePlayers.Count.ToString() + " currently online players:");
                 sender.PlayerInstance.SendMessage(playerList + ".");
+            }
+
+            sender.PlayerInstance.SendMessage(ChatColour.RED + ERROR_INVALID_PERMISSIONS + cmdName + ".");
+            return false;
+        }
+
+        /// <summary>
+        /// [Command Callback] Handles the /me command.
+        /// </summary>
+        private static bool ServerMe(IAccount sender, IList<string> args)
+        {
+            const string cmdName = "/me";
+
+            if (sender.HasPermission("rwcore.*") || sender.HasPermission("rwcore.me"))
+            {
+                if (args.Count == 0)
+                {
+                    sender.PlayerInstance.SendMessage(ChatColour.RED + ERROR_INVALID_ARGS_LENGTH + cmdName + ".");
+                    return false;
+                }
+
+                string message = ChatColour.YELLOW + " *" + sender.DisplayName;
+
+                foreach (string arg in args)
+                {
+                    message += " " + arg;
+                }
+
+                RwCore.Server.BroadcastMessage(message);
+
+                return true;
             }
 
             sender.PlayerInstance.SendMessage(ChatColour.RED + ERROR_INVALID_PERMISSIONS + cmdName + ".");
