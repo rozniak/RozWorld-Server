@@ -71,6 +71,10 @@ namespace Oddmatics.RozWorld.Server
                     // Command /stop
                     RwCore.Server.PermissionAuthority.RegisterPermission("rwcore.stop", "Stops the server.");
                     RwCore.Server.RegisterCommand("stop", ServerStop);
+
+                    // Command /whisper
+                    RwCore.Server.PermissionAuthority.RegisterPermission("rwcore.whisper", "Send a quick private message to a player.");
+                    RwCore.Server.RegisterCommand("whisper", ServerWhisper);
                 }
                 else
                     throw new InvalidOperationException("ServerCommands.Register: Commands have already been registered.");
@@ -359,6 +363,47 @@ namespace Oddmatics.RozWorld.Server
             }
 
             player.SendMessage(ChatColour.RED + ERROR_INVALID_PERMISSIONS + cmdName + ".");
+            return false;
+        }
+
+        /// <summary>
+        /// [Command Callback] Handles the /whisper command.
+        /// </summary>
+        private static bool ServerWhisper(object sender, IList<string> args)
+        {
+            const string cmdName = "/whisper";
+            Player player = sender is Player ? (Player)sender : null;
+
+            if (sender is IRwServer ||
+                player.HasPermission("rwcore.*") || player.HasPermission("rwcore.whisper"))
+            {
+                if (args.Count <= 1)
+                {
+                    SafeMessage(sender, ChatColour.RED + ERROR_INVALID_ARGS_LENGTH + cmdName + ".");
+                    return false;
+                }
+
+                Player targetPlayer = RwCore.Server.GetPlayer(args[0]);
+
+                if (targetPlayer == null)
+                {
+                    SafeMessage(sender, ChatColour.RED + "There's no one by that name to whisper to!");
+                    return false;
+                }
+
+                string displayName = sender is IRwServer ? "server" : player.DisplayName;
+                string message = "[" + displayName + " -> me]";
+
+                for (int i = 1; i <= args.Count; i++)
+                {
+                    message += " " + args[i];
+                }
+
+                targetPlayer.SendMessage(message);
+
+                return true;
+            }
+
             return false;
         }
     }
