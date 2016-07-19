@@ -139,11 +139,15 @@ namespace Oddmatics.RozWorld.Server.Accounts
 
         public RwPlayer InstatePlayerInstance(ConnectedClient client)
         {
-            if (!LoggedIn)
+            if (!IsServer && !LoggedIn)
                 return null;
 
-            if (client == null)
+            if (!IsServer && client == null)
                 throw new ArgumentNullException("RwAccount.InstatePlayerInstance: Client cannot be null.");
+
+            // Working on putting in a server player instance
+            // Need to make the instance get created in a special case for the server (as a chat bot)
+            // Make sure the server is not added to player count when tallying online players :D
 
             PlayerInstance = new RwPlayer(this, client);
 

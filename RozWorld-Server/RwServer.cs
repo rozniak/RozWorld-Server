@@ -307,11 +307,17 @@ namespace Oddmatics.RozWorld.Server
             // Restart here
         }
 
-        public bool SendCommand(RwAccount sender, string cmd)
+        public bool SendCommand(object sender, string cmd)
         {
             try
             {
-                Logger.Out("[CMD] " + sender.Username + " issued command: /" + cmd, false);
+                if (sender == this)
+                    Logger.Out("[CMD] server issued command: /" + cmd, false);
+                else // Should be a player
+                {
+                    Player player = (Player)sender;
+                    Logger.Out("[CMD] " + player.DisplayName + " issued command: /" + cmd, false);
+                }
 
                 var args = new List<string>();
                 string[] cmdSplit = cmd.Split();
@@ -401,6 +407,9 @@ namespace Oddmatics.RozWorld.Server
 
             Logger.Out("[STAT] Initialising systems...");
 
+            AccountNameFromDisplay = new Dictionary<string, string>();
+            OnlineBotPlayers = new Dictionary<string, RwPlayer>();
+            OnlineRealPlayers = new Dictionary<string, RwPlayer>();
             AccountsManager = new RwAccountsManager();
             ContentManager = new RwContentManager();
             PermissionAuthority = new RwPermissionAuthority();
