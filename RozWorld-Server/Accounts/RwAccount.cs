@@ -84,6 +84,7 @@ namespace Oddmatics.RozWorld.Server.Accounts
 
         public RwAccount(string accountPath)
         {
+            // TODO: drop server account, it is unnecessary now
             if (accountPath.ToLower() == "server")
             {
                 if (ServerAccountCreated)
@@ -144,10 +145,6 @@ namespace Oddmatics.RozWorld.Server.Accounts
 
             if (!IsServer && client == null)
                 throw new ArgumentNullException("RwAccount.InstatePlayerInstance: Client cannot be null.");
-
-            // Working on putting in a server player instance
-            // Need to make the instance get created in a special case for the server (as a chat bot)
-            // Make sure the server is not added to player count when tallying online players :D
 
             PlayerInstance = new RwPlayer(this, client);
 

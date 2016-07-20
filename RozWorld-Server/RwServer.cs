@@ -562,7 +562,8 @@ namespace Oddmatics.RozWorld.Server
         private void UdpServer_LogInRequestReceived(object sender, PacketEventArgs e)
         {
             var logInPacket = (LogInRequestPacket)e.Packet;
-            byte result;
+            string realUsername = logInPacket.Username.ToLower();
+            byte result = ErrorMessage.INTERNAL_ERROR; // Default to generic error, on success this will be replaced
 
             Logger.Out("[UDP] Log in request received by " + logInPacket.SenderEndPoint.ToString());
 
@@ -574,35 +575,38 @@ namespace Oddmatics.RozWorld.Server
             {
                 // TODO: Revise a LOT of this code to work with both bots and real users :)
 
-                // Check if there's already a user logged in, kick them if they are
-                if (AccountNameFromDisplay.ContainsValue(logInPacket.Username))
-                    Kick(GetPlayer(logInPacket.Username), "Another player has logged into this account on this server.");
+                // Check if there's already a user (not a bot) logged in, kick them if they are
+                if (OnlineRealPlayers.ContainsKey(realUsername))
+                    Kick(GetPlayer(realUsername), "Another player has logged into this account on this server.");
 
-                DateTime utcMidnight = DateTime.UtcNow.Date;
-                long utcHashTime = utcMidnight.Ticks + logInPacket.UtcHashTimeDifference;
-
-                var account = new RwAccount(logInPacket.Username);
-                result = account.LogIn(logInPacket.PasswordHash, utcHashTime);
-
-                if (result == ErrorMessage.NO_ERROR)
+                if (!OnlineBotPlayers.ContainsKey(realUsername))
                 {
-                    UdpServer.AddClient(logInPacket.SenderEndPoint); // Attempt to add the client
-                    ConnectedClient client = UdpServer.GetConnectedClient(logInPacket.SenderEndPoint);
+                    var account = new RwAccount(logInPacket.Username);
+                    result = account.LogIn(logInPacket.PasswordHash, logInPacket.UtcHashTime);
 
-                    if (client != null) // Everything was successful
+                    if (result == ErrorMessage.NO_ERROR)
                     {
-                        // Add the player to the list and update dictionaries
-                        RwPlayer player = account.InstatePlayerInstance(client);
-                        OnlineRealPlayers.Add(player.Account.Username.ToLower(), player);
-                        AccountNameFromDisplay.Add(player.DisplayName.ToLower(), player.Account.Username.ToLower());
+                        UdpServer.AddClient(logInPacket.SenderEndPoint); // Attempt to add the client
+                        ConnectedClient client = UdpServer.GetConnectedClient(logInPacket.SenderEndPoint);
+
+                        if (client != null) // Everything was successful
+                        {
+                            // Add the player to the list and update dictionaries
+                            RwPlayer player = account.InstatePlayerInstance(client);
+                            OnlineRealPlayers.Add(realUsername, player);
+                            AccountNameFromDisplay.Add(player.DisplayName.ToLower(), realUsername);
+                        }
+                        else
+                        {
+                            // Something odd happened
+                            Logger.Out("[ERR] Something strange occurred during log in, connected client instance could not be instated.");
+                            result = ErrorMessage.INTERNAL_ERROR; // Update error message since it was a failure
+                        }
                     }
                     else
-                    {
-                        // Something odd happened
-                        Logger.Out("[ERR] Something strange occurred during log in, connected client instance could not be instated.");
-                        result = ErrorMessage.INTERNAL_ERROR; // Update error message since it was a failure
-                    }
+                        result = ErrorMessage.ACCOUNT_NAME_TAKEN; // Bot rules over everything
                 }
+                
             }
             else
                 result = ErrorMessage.HASHTIME_INVALID;
