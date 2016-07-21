@@ -58,6 +58,10 @@ namespace Oddmatics.RozWorld.Server
                     RwCore.Server.PermissionAuthority.RegisterPermission("rwcore.msg", "Send a private message to a player.");
                     RwCore.Server.RegisterCommand("msg", ServerPrivateMessage);
 
+                    // Command /plugins
+                    RwCore.Server.PermissionAuthority.RegisterPermission("rwcore.plugins", "View the installed server plugins.");
+                    RwCore.Server.RegisterCommand("plugins", ServerPlugins);
+
                     // Command /say
                     RwCore.Server.PermissionAuthority.RegisterPermission("rwcore.say.*", "Full talking permissions");
                     RwCore.Server.PermissionAuthority.RegisterPermission("rwcore.say.self", "Talk in game chat.");
@@ -213,6 +217,34 @@ namespace Oddmatics.RozWorld.Server
         }
 
         /// <summary>
+        /// [Command Callback] Handles the /plugins command.
+        /// </summary>
+        private static bool ServerPlugins(ICommandCaller sender, IList<string> args)
+        {
+            const string cmdName = "/plugins";
+
+            if (sender.HasPermission("rwcore.*") || sender.HasPermission("rwcore.plugins"))
+            {
+                IList<IPlugin> plugins = RwCore.Server.Plugins;
+                string message = "Installed plugins (" + plugins.Count + "): ";
+
+                for (int i = 0; i < plugins.Count; i++)
+                {
+                    message += plugins[i].Name;
+
+                    if (i < plugins.Count - 1)
+                        message += ", ";
+                }
+
+                sender.SendMessage(message);
+                return true;
+            }
+
+            sender.SendMessage(ChatColour.RED + ERROR_INVALID_PERMISSIONS + cmdName + ".");
+            return false;
+        }
+
+        /// <summary>
         /// [Command Callback] Handles the /msg command.
         /// </summary>
         private static bool ServerPrivateMessage(ICommandCaller sender, IList<string> args)
@@ -359,14 +391,17 @@ namespace Oddmatics.RozWorld.Server
                     return false;
                 }
 
-                string message = "[" + sender.DisplayName + " -> me]";
+                string senderMessage = "[me -> " + targetPlayer.DisplayName + "]";
+                string recipientMessage = "[" + sender.DisplayName + " -> me]";
+                string message = String.Empty;
 
                 for (int i = 1; i <= args.Count; i++)
                 {
                     message += " " + args[i];
                 }
 
-                targetPlayer.SendMessage(message);
+                sender.SendMessage(senderMessage + message);
+                targetPlayer.SendMessage(recipientMessage + message);
 
                 return true;
             }
