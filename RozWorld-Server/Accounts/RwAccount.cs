@@ -35,29 +35,27 @@ namespace Oddmatics.RozWorld.Server.Accounts
         }
         public DateTime CreationDate
         {
-            get { if (IsServer) return new DateTime(); else return AccountFile.CreationDate; }
+            get { return AccountFile.CreationDate; }
         }
         public IPAddress CreationIP
         {
-            get { if (IsServer) return IPAddress.Loopback; else return AccountFile.CreationIP; }
+            get { return AccountFile.CreationIP; }
         }
         public IPAddress CurrentIP;
         public string DisplayName
         {
-            get { if (IsServer) return "server"; else return AccountFile.DisplayName; }
+            get { return AccountFile.GetDisplayName(); }
             set
             {
-                if (IsServer)
-                    throw new InvalidOperationException("RwAccount.DisplayName.Set: Cannot set server account's display name.");
-                else { }
+                if (RwPlayer.ValidName(value))
+                    AccountFile.SetDisplayName(value);
             }
         }
         public IPAddress LastLoginIP
         {
-            get { if (IsServer) return IPAddress.Loopback; else return AccountFile.LastLogInIP; }
+            get { return AccountFile.LastLogInIP; }
         }
         public bool IsPlayer { get { return PlayerInstance != null; } }
-        public bool IsServer { get; private set; }
         public IPermissionGroup PermissionGroup { get; private set; }
         public IList<string> Permissions
         {
@@ -73,7 +71,7 @@ namespace Oddmatics.RozWorld.Server.Accounts
             }
         }
         public Player PlayerInstance { get; private set; }
-        public string Username { get { if (IsServer) return "server"; else return AccountFile.Username; } }
+        public string Username { get { return AccountFile.Username; } }
 
 
         private AccountFile AccountFile;
@@ -84,66 +82,46 @@ namespace Oddmatics.RozWorld.Server.Accounts
 
         public RwAccount(string accountPath)
         {
-            // TODO: drop server account, it is unnecessary now
-            if (accountPath.ToLower() == "server")
-            {
-                if (ServerAccountCreated)
-                    throw new ArgumentException("RwAccount.New: Cannot create server account, one has already been made.");
-
-                IsServer = true;
-                LoggedIn = true;
-            }
-            else
-            {
-                AccountFile = new AccountFile(accountPath);
-                IsServer = false;
-                PermissionGroup = RwCore.Server.PermissionAuthority
-                    .GetGroup(RwCore.Server.PermissionAuthority.DefaultGroupName);
-                PermissionStates = new Dictionary<string, PermissionState>(); // TODO: load this
-                LoggedIn = false;
-            }
+            AccountFile = new AccountFile(accountPath);
+            PermissionGroup = RwCore.Server.PermissionAuthority
+                .GetGroup(RwCore.Server.PermissionAuthority.DefaultGroupName);
+            PermissionStates = new Dictionary<string, PermissionState>(); // TODO: load this
+            LoggedIn = false;
         }
 
 
         public PermissionState CheckAccountPermission(string key)
         {
-            if (IsServer)
-                return PermissionState.Granted;
+            if (PermissionStates.ContainsKey(key))
+                return PermissionStates[key];
             else
-            {
-                if (PermissionStates.ContainsKey(key))
-                    return PermissionStates[key];
-                else
-                    return PermissionState.Unset;
-            }
+                return PermissionState.Unset;
         }
 
         public bool HasPermission(string key)
         {
-            if (IsServer)
-                return true;
-            else
+            // Check this accounts permissions first as they take priority
+            switch (CheckAccountPermission(key))
             {
-                // Check this accounts permissions first as they take priority
-                switch (CheckAccountPermission(key))
-                {
-                    case PermissionState.Denied: return false;
-                    case PermissionState.Granted: return true;
-                    case PermissionState.Unset:
-                    default:
-                        break;
-                }
-
-                return PermissionGroup.HasPermission(key);
+                case PermissionState.Denied: return false;
+                case PermissionState.Granted: return true;
+                case PermissionState.Unset:
+                default:
+                    break;
             }
+
+            return PermissionGroup.HasPermission(key);
         }
 
         public RwPlayer InstatePlayerInstance(ConnectedClient client)
         {
-            if (!IsServer && !LoggedIn)
+            if (PlayerInstance != null) // Already has instated player instance
                 return null;
 
-            if (!IsServer && client == null)
+            if (!LoggedIn)
+                return null;
+
+            if (client == null)
                 throw new ArgumentNullException("RwAccount.InstatePlayerInstance: Client cannot be null.");
 
             PlayerInstance = new RwPlayer(this, client);
@@ -186,27 +164,22 @@ namespace Oddmatics.RozWorld.Server.Accounts
 
         public bool SetAccountPermission(string key, PermissionState newState)
         {
-            if (!IsServer)
+            if (PermissionStates.ContainsKey(key))
             {
-                if (PermissionStates.ContainsKey(key))
-                {
-                    if (newState == PermissionState.Unset)
-                        PermissionStates.Remove(key);
-                    else
-                        PermissionStates[key] = newState;
-                }
-                else if (newState != PermissionState.Unset)
-                    PermissionStates.Add(key, newState);
-
-                return true;
+                if (newState == PermissionState.Unset)
+                    PermissionStates.Remove(key);
+                else
+                    PermissionStates[key] = newState;
             }
+            else if (newState != PermissionState.Unset)
+                PermissionStates.Add(key, newState);
 
-            return false;
+            return true;
         }
 
         public bool SetPermissionGroup(string name)
         {
-            if (IsServer || !RwCore.Server.PermissionAuthority.GroupNames.Contains(name))
+            if (!RwCore.Server.PermissionAuthority.GroupNames.Contains(name))
                 return false;
 
             PermissionGroup = RwCore.Server.PermissionAuthority.GetGroup(name);

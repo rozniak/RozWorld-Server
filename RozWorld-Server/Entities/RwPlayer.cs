@@ -63,9 +63,6 @@ namespace Oddmatics.RozWorld.Server.Entities
 
         public RwPlayer(RwAccount account, ConnectedClient client)
         {
-            if (account.IsServer)
-                throw new ArgumentException("RwPlayer.New: Cannot create a player instance for the server account.");
-
             if (client == null)
                 throw new ArgumentNullException("RwPlayer.New: Client cannot be null.");
 

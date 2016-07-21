@@ -141,7 +141,6 @@ namespace Oddmatics.RozWorld.Server
         public bool HasStarted { get; private set; }
         private Dictionary<string, RwPlayer> OnlineRealPlayers;
         private Dictionary<string, RwPlayer> OnlineBotPlayers;
-        public RwAccount ServerAccount { get; private set; }
         private string SpawnWorldGenerator = String.Empty;
         private string SpawnWorldGeneratorOptions = String.Empty;
         private RwUdpServer UdpServer;
@@ -442,7 +441,6 @@ namespace Oddmatics.RozWorld.Server
             PermissionAuthority = new RwPermissionAuthority();
             InstalledCommands = new Dictionary<string, CommandSentCallback>();
             StatCalculator = new RwStatCalculator();
-            ServerAccount = new RwAccount("server"); // Create the server account (max privileges)
 
             ServerCommands.Register(); // Register commands and permissions for the server
 
