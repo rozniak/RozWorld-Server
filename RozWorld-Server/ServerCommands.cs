@@ -83,36 +83,19 @@ namespace Oddmatics.RozWorld.Server
                 throw new InvalidOperationException("ServerCommands.Register: Cannot register commands while the server is null.");
         }
 
-        /// <summary>
-        /// Handles sending a message to the command caller, must be the server or a player.
-        /// </summary>
-        /// <param name="recipient">The command caller, must be the server or a player.</param>
-        /// <param name="message">The message to send.</param>
-        private static void SafeMessage(object recipient, string message)
-        {
-            if (recipient is IRwServer)
-                ((IRwServer)recipient).Logger.Out(message);
-            else if (recipient is Player)
-                ((Player)recipient).SendMessage(message);
-            else
-                throw new ArgumentException("ServerCommands.SafeMessage: Invalid Type of recipient given.");
-        }
-
 
         /// <summary>
         /// [Command Callback] Handles the /kick command.
         /// </summary>
-        private static bool ServerKick(object sender, IList<string> args)
+        private static bool ServerKick(ICommandCaller sender, IList<string> args)
         {
             const string cmdName = "/kick";
-            Player player = sender is Player ? (Player)sender : null;
 
-            if (sender is IRwServer ||
-                player.HasPermission("rwcore.*") || player.HasPermission("rwcore.kick"))
+            if (sender.HasPermission("rwcore.*") || sender.HasPermission("rwcore.kick"))
             {
                 if (args.Count == 0)
                 {
-                    SafeMessage(sender, ChatColour.RED + ERROR_INVALID_ARGS_LENGTH + cmdName + ".");
+                    sender.SendMessage(ChatColour.RED + ERROR_INVALID_ARGS_LENGTH + cmdName + ".");
                     return false;
                 }
 
@@ -131,27 +114,27 @@ namespace Oddmatics.RozWorld.Server
 
                 if (!RwCore.Server.Kick(args[0], reason)) // Try to kick, if unsuccessful then the player didn't exist
                 {
-                    SafeMessage(sender, ChatColour.RED + "Invalid player specified to kick.");
+                    sender.SendMessage(ChatColour.RED + "Invalid player specified to kick.");
                     return false;
                 }
 
                 return true;
             }
 
-            player.SendMessage(ChatColour.RED + ERROR_INVALID_PERMISSIONS + cmdName + ".");
+            sender.SendMessage(ChatColour.RED + ERROR_INVALID_PERMISSIONS + cmdName + ".");
             return false;
         }
 
         /// <summary>
         /// [Command Callback] Handles the /list command.
         /// </summary>
-        private static bool ServerList(object sender, IList<string> args)
+        private static bool ServerList(ICommandCaller sender, IList<string> args)
         {
-            const string cmdName = "/list";
-            Player player = sender is Player ? (Player)sender : null;
+            // TODO: patch this function up a bit, it raises an exception right now
 
-            if (sender is IRwServer ||
-                player.HasPermission("rwcore.*") || player.HasPermission("rwcore.list"))
+            const string cmdName = "/list";
+
+            if (sender.HasPermission("rwcore.*") || sender.HasPermission("rwcore.list"))
             {
                 IList<Player> onlinePlayers = RwCore.Server.OnlinePlayers;
 
@@ -162,8 +145,7 @@ namespace Oddmatics.RozWorld.Server
                     Player foundPlayer = onlinePlayers[i];
                     string fullDisplayName = String.Empty;
 
-                    if (sender is IRwServer ||
-                        player.HasPermission("rwcore.list.all"))
+                    if (sender.HasPermission("rwcore.list.all"))
                     {
                         if (!foundPlayer.IsRealPlayer) // Player is a bot
                             fullDisplayName += "B|";
@@ -191,33 +173,30 @@ namespace Oddmatics.RozWorld.Server
                         playerList += ", ";
                 }
 
-                SafeMessage(sender, onlinePlayers.Count.ToString() + " currently online players:");
-                SafeMessage(sender, playerList + ".");
+                sender.SendMessage(onlinePlayers.Count.ToString() + " currently online players:");
+                sender.SendMessage(playerList + ".");
             }
 
-            player.SendMessage(ChatColour.RED + ERROR_INVALID_PERMISSIONS + cmdName + ".");
+            sender.SendMessage(ChatColour.RED + ERROR_INVALID_PERMISSIONS + cmdName + ".");
             return false;
         }
 
         /// <summary>
         /// [Command Callback] Handles the /me command.
         /// </summary>
-        private static bool ServerMe(object sender, IList<string> args)
+        private static bool ServerMe(ICommandCaller sender, IList<string> args)
         {
             const string cmdName = "/me";
-            Player player = sender is Player ? (Player)sender : null;
 
-            if (sender is IRwServer ||
-                player.HasPermission("rwcore.*") || player.HasPermission("rwcore.me"))
+            if (sender.HasPermission("rwcore.*") || sender.HasPermission("rwcore.me"))
             {
                 if (args.Count == 0)
                 {
-                    SafeMessage(sender, ChatColour.RED + ERROR_INVALID_ARGS_LENGTH + cmdName + ".");
+                    sender.SendMessage(ChatColour.RED + ERROR_INVALID_ARGS_LENGTH + cmdName + ".");
                     return false;
                 }
 
-                string displayName = sender is IRwServer ? "server" : player.DisplayName;
-                string message = ChatColour.YELLOW + " *" + displayName;
+                string message = ChatColour.YELLOW + " *" + sender.DisplayName;
 
                 foreach (string arg in args)
                 {
@@ -229,24 +208,22 @@ namespace Oddmatics.RozWorld.Server
                 return true;
             }
 
-            player.SendMessage(ChatColour.RED + ERROR_INVALID_PERMISSIONS + cmdName + ".");
+            sender.SendMessage(ChatColour.RED + ERROR_INVALID_PERMISSIONS + cmdName + ".");
             return false;
         }
 
         /// <summary>
         /// [Command Callback] Handles the /msg command.
         /// </summary>
-        private static bool ServerPrivateMessage(object sender, IList<string> args)
+        private static bool ServerPrivateMessage(ICommandCaller sender, IList<string> args)
         {
             const string cmdName = "/msg";
-            Player player = sender is Player ? (Player)sender : null;
 
-            if (sender is IRwServer ||
-                player.HasPermission("rwcore.*") || player.HasPermission("rwcore.msg"))
+            if (sender.HasPermission("rwcore.*") || sender.HasPermission("rwcore.msg"))
             {
                 if (args.Count <= 1)
                 {
-                    SafeMessage(sender, ChatColour.RED + ERROR_INVALID_ARGS_LENGTH + cmdName + ".");
+                    sender.SendMessage(ChatColour.RED + ERROR_INVALID_ARGS_LENGTH + cmdName + ".");
                     return false;
                 }
 
@@ -268,30 +245,28 @@ namespace Oddmatics.RozWorld.Server
                 //sender.PlayerInstance.SendPrivateMessageTo(message, targetPlayer); old code
 
                 // Placeholder for now
-                SafeMessage(sender, "Private messaging not implemented yet.");
+                sender.SendMessage("Private messaging not implemented yet.");
 
                 return true;
             }
 
-            player.SendMessage(ChatColour.RED + ERROR_INVALID_PERMISSIONS + cmdName + ".");
+            sender.SendMessage(ChatColour.RED + ERROR_INVALID_PERMISSIONS + cmdName + ".");
             return false;
         }
 
         /// <summary>
         /// [Command Callback] Handles the /say command.
         /// </summary>
-        private static bool ServerSay(object sender, IList<string> args)
+        private static bool ServerSay(ICommandCaller sender, IList<string> args)
         {
             const string cmdName = "/say";
-            Player player = sender is Player ? (Player)sender : null;
 
-            if (sender is IRwServer ||
-                player.HasPermission("rwcore.*") || player.HasPermission("rwcore.say.*") ||
-                player.HasPermission("rwcore.say.server"))
+            if (sender.HasPermission("rwcore.*") || sender.HasPermission("rwcore.say.*") ||
+                sender.HasPermission("rwcore.say.server"))
             {
                 if (args.Count == 0)
                 {
-                    SafeMessage(sender, ChatColour.RED + ERROR_INVALID_ARGS_LENGTH + cmdName + ".");
+                    sender.SendMessage(ChatColour.RED + ERROR_INVALID_ARGS_LENGTH + cmdName + ".");
                     return false;
                 }
 
@@ -307,24 +282,22 @@ namespace Oddmatics.RozWorld.Server
                 return true;
             }
 
-            player.SendMessage(ChatColour.RED + ERROR_INVALID_PERMISSIONS + cmdName + ".");
+            sender.SendMessage(ChatColour.RED + ERROR_INVALID_PERMISSIONS + cmdName + ".");
             return false;
         }
 
         /// <summary>
         /// [Command Callback] Handles the /slap command.
         /// </summary>
-        private static bool ServerSlap(object sender, IList<string> args)
+        private static bool ServerSlap(ICommandCaller sender, IList<string> args)
         {
             const string cmdName = "/slap";
-            Player player = sender is Player ? (Player)sender : null;
 
-            if (sender is IRwServer ||
-                player.HasPermission("rwcore.*") || player.HasPermission("rwcore.slap"))
+            if (sender.HasPermission("rwcore.*") || sender.HasPermission("rwcore.slap"))
             {
                 if (args.Count != 1)
                 {
-                    SafeMessage(sender, ChatColour.RED + ERROR_INVALID_ARGS_LENGTH + cmdName + ".");
+                    sender.SendMessage(ChatColour.RED + ERROR_INVALID_ARGS_LENGTH + cmdName + ".");
                     return false;
                 }
 
@@ -332,54 +305,49 @@ namespace Oddmatics.RozWorld.Server
 
                 if (targetPlayer == null)
                 {
-                    SafeMessage(sender, ChatColour.RED + "You can't slap someone that isn't here!");
+                    sender.SendMessage(ChatColour.RED + "You can't slap someone that isn't here!");
                     return false;
                 }
 
-                string displayName = sender is IRwServer ? "server" : player.DisplayName;
-                RwCore.Server.BroadcastMessage(ChatColour.ORANGE + " *" + displayName + " slaps " +
-                    targetPlayer.DisplayName + " with a large eel.");
+                RwCore.Server.BroadcastMessage(ChatColour.ORANGE + " *" + sender.DisplayName
+                    + " slaps " + targetPlayer.DisplayName + " with a large eel.");
 
                 return true;
             }
 
-            player.SendMessage(ChatColour.RED + ERROR_INVALID_PERMISSIONS + cmdName + ".");
+            sender.SendMessage(ChatColour.RED + ERROR_INVALID_PERMISSIONS + cmdName + ".");
             return false;
         }
 
         /// <summary>
         /// [Command Callback] Handles the /stop command.
         /// </summary>
-        private static bool ServerStop(object sender, IList<string> args)
+        private static bool ServerStop(ICommandCaller sender, IList<string> args)
         {
             const string cmdName = "/stop";
-            Player player = sender is Player ? (Player)sender : null;
 
-            if (sender is IRwServer ||
-                player.HasPermission("rwcore.*") || player.HasPermission("rwcore.stop"))
+            if (sender.HasPermission("rwcore.*") || sender.HasPermission("rwcore.stop"))
             {
                 ((RwServer)RwCore.Server).Stop();
                 return true;
             }
 
-            player.SendMessage(ChatColour.RED + ERROR_INVALID_PERMISSIONS + cmdName + ".");
+            sender.SendMessage(ChatColour.RED + ERROR_INVALID_PERMISSIONS + cmdName + ".");
             return false;
         }
 
         /// <summary>
         /// [Command Callback] Handles the /whisper command.
         /// </summary>
-        private static bool ServerWhisper(object sender, IList<string> args)
+        private static bool ServerWhisper(ICommandCaller sender, IList<string> args)
         {
             const string cmdName = "/whisper";
-            Player player = sender is Player ? (Player)sender : null;
 
-            if (sender is IRwServer ||
-                player.HasPermission("rwcore.*") || player.HasPermission("rwcore.whisper"))
+            if (sender.HasPermission("rwcore.*") || sender.HasPermission("rwcore.whisper"))
             {
                 if (args.Count <= 1)
                 {
-                    SafeMessage(sender, ChatColour.RED + ERROR_INVALID_ARGS_LENGTH + cmdName + ".");
+                    sender.SendMessage(ChatColour.RED + ERROR_INVALID_ARGS_LENGTH + cmdName + ".");
                     return false;
                 }
 
@@ -387,12 +355,11 @@ namespace Oddmatics.RozWorld.Server
 
                 if (targetPlayer == null)
                 {
-                    SafeMessage(sender, ChatColour.RED + "There's no one by that name to whisper to!");
+                    sender.SendMessage(ChatColour.RED + "There's no one by that name to whisper to!");
                     return false;
                 }
 
-                string displayName = sender is IRwServer ? "server" : player.DisplayName;
-                string message = "[" + displayName + " -> me]";
+                string message = "[" + sender.DisplayName + " -> me]";
 
                 for (int i = 1; i <= args.Count; i++)
                 {

@@ -86,6 +86,7 @@ namespace Oddmatics.RozWorld.Server
         public string BrowserName { get; private set; }
         public IList<string> Commands { get { return new List<string>(InstalledCommands.Keys).AsReadOnly(); } }
         public IContentManager ContentManager { get; private set; }
+        public string DisplayName { get { return "Server"; } }
         public Difficulty GameDifficulty { get; set; }
         public GameMode GameMode { get; private set; }
         public ushort HostingPort { get; private set; }
@@ -328,7 +329,7 @@ namespace Oddmatics.RozWorld.Server
             // Restart here
         }
 
-        public bool SendCommand(object sender, string cmd)
+        public bool SendCommand(ICommandCaller sender, string cmd)
         {
             try
             {
