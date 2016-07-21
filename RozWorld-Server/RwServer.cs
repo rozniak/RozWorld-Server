@@ -84,6 +84,7 @@ namespace Oddmatics.RozWorld.Server
 
         public IAccountsManager AccountsManager { get; private set; }
         public string BrowserName { get; private set; }
+        public IList<string> Commands { get { return new List<string>(InstalledCommands.Keys).AsReadOnly(); } }
         public IContentManager ContentManager { get; private set; }
         public Difficulty GameDifficulty { get; set; }
         public GameMode GameMode { get; private set; }
@@ -132,7 +133,7 @@ namespace Oddmatics.RozWorld.Server
         private Dictionary<string, string> AccountNameFromDisplay;
         private List<string> BannedAccountNames;
         private List<IPAddress> BannedIPs;
-        private Dictionary<string, CommandSentCallback> Commands;
+        private Dictionary<string, CommandSentCallback> InstalledCommands;
         private string[] CompatibleServerNames = new string[] { "vanilla", "*" };
         private ushort CompatibleVanillaVersion = 1;
         public string CurrentPluginLoading { get; private set; }
@@ -160,6 +161,21 @@ namespace Oddmatics.RozWorld.Server
                     player.SendMessage(message);
                 }
             }
+        }
+
+        public string GetCommandDescription(string command)
+        {
+            return String.Empty; // TODO: code this
+        }
+
+        public IList<string> GetCommandsByPlugin(string plugin)
+        {
+            return new List<string>().AsReadOnly(); // TODO: code this
+        }
+
+        public string GetCommandUsage(string command)
+        {
+            return String.Empty; // TODO: code this
         }
 
         public Player GetPlayer(string name)
@@ -190,6 +206,11 @@ namespace Oddmatics.RozWorld.Server
         public IWorld GetWorld(string name)
         {
             return null; // TODO: code this
+        }
+
+        public bool HasPermission(string key)
+        {
+            return true; // Server has full permissions
         }
 
         public bool IsValidEntity(ushort id)
@@ -293,9 +314,9 @@ namespace Oddmatics.RozWorld.Server
         {
             string realCmd = cmd.ToLower();
 
-            if (!Commands.ContainsKey(realCmd))
+            if (!InstalledCommands.ContainsKey(realCmd))
             {
-                Commands.Add(realCmd, func);
+                InstalledCommands.Add(realCmd, func);
                 return true;
             }
 
@@ -332,7 +353,7 @@ namespace Oddmatics.RozWorld.Server
                 }
 
                 // Call the attached command delegate - commands are all lowercase
-                Commands[realCmd](sender, args.AsReadOnly());
+                InstalledCommands[realCmd](sender, args.AsReadOnly());
 
                 return true;
             }
@@ -347,6 +368,11 @@ namespace Oddmatics.RozWorld.Server
                     ex.Message + ";\n" + ex.StackTrace);
                 return false;
             }
+        }
+
+        public void SendMessage(string message)
+        {
+            Logger.Out(message);
         }
 
         public void Start()
@@ -413,7 +439,7 @@ namespace Oddmatics.RozWorld.Server
             AccountsManager = new RwAccountsManager();
             ContentManager = new RwContentManager();
             PermissionAuthority = new RwPermissionAuthority();
-            Commands = new Dictionary<string, CommandSentCallback>();
+            InstalledCommands = new Dictionary<string, CommandSentCallback>();
             StatCalculator = new RwStatCalculator();
             ServerAccount = new RwAccount("server"); // Create the server account (max privileges)
 
@@ -571,7 +597,7 @@ namespace Oddmatics.RozWorld.Server
             if (BannedIPs.Contains(logInPacket.SenderEndPoint.Address) ||
                 BannedAccountNames.Contains(logInPacket.Username))
                 result = ErrorMessage.BANNED;
-            else if (logInPacket.ValidHashTime)
+            else if (logInPacket.ValidHashTime())
             {
                 // TODO: Revise a LOT of this code to work with both bots and real users :)
 
