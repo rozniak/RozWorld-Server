@@ -32,6 +32,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Reflection;
+using System.Text.RegularExpressions;
 
 namespace Oddmatics.RozWorld.Server
 {
@@ -314,7 +315,8 @@ namespace Oddmatics.RozWorld.Server
         {
             string realCmd = cmd.ToLower();
 
-            if (!InstalledCommands.ContainsKey(realCmd))
+            if (new Regex(@"^\/+[A-Za-z]+$").IsMatch(realCmd) &&
+                !InstalledCommands.ContainsKey(realCmd))
             {
                 InstalledCommands.Add(realCmd, func);
                 return true;
@@ -332,13 +334,7 @@ namespace Oddmatics.RozWorld.Server
         {
             try
             {
-                if (sender == this)
-                    Logger.Out("[CMD] server issued command: /" + cmd, false);
-                else // Should be a player
-                {
-                    Player player = (Player)sender;
-                    Logger.Out("[CMD] " + player.DisplayName + " issued command: /" + cmd, false);
-                }
+                Logger.Out("[CMD] " + sender.DisplayName + " issued command: /" + cmd, false);
 
                 var args = new List<string>();
                 string[] cmdSplit = cmd.Split();
