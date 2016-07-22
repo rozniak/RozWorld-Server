@@ -135,7 +135,7 @@ namespace Oddmatics.RozWorld.Server
         private Dictionary<string, string> AccountNameFromDisplay;
         private List<string> BannedAccountNames;
         private List<IPAddress> BannedIPs;
-        private Dictionary<string, CommandSentCallback> InstalledCommands;
+        private Dictionary<string, Command> InstalledCommands;
         private string[] CompatibleServerNames = new string[] { "vanilla", "*" };
         private ushort CompatibleVanillaVersion = 1;
         public string CurrentPluginLoading { get; private set; }
@@ -311,14 +311,19 @@ namespace Oddmatics.RozWorld.Server
             FileSystem.PutTextFile(targetFile, new string[] { Properties.Resources.DefaultConfigs });
         }
 
-        public bool RegisterCommand(string cmd, CommandSentCallback func)
+        public bool RegisterCommand(string cmd, CommandSentCallback func, string description, string usage)
         {
+            if (HasStarted)
+                throw new InvalidOperationException("RwServer.RegisterCommand: Cannot register commands " +
+            "after the server has completed startup.");
+
             string realCmd = cmd.ToLower();
 
-            if (new Regex(@"^\/+[A-Za-z]+$").IsMatch(realCmd) &&
+            if (new Regex(@"^\/*[a-z]+$").IsMatch(realCmd) &&
                 !InstalledCommands.ContainsKey(realCmd))
             {
-                InstalledCommands.Add(realCmd, func);
+                var command = new Command(func, CurrentPluginLoading, description, usage);
+                InstalledCommands.Add(realCmd, command);
                 return true;
             }
 
@@ -349,7 +354,7 @@ namespace Oddmatics.RozWorld.Server
                 }
 
                 // Call the attached command delegate - commands are all lowercase
-                InstalledCommands[realCmd](sender, args.AsReadOnly());
+                InstalledCommands[realCmd].Delegate(sender, args.AsReadOnly());
 
                 return true;
             }
@@ -435,7 +440,7 @@ namespace Oddmatics.RozWorld.Server
             AccountsManager = new RwAccountsManager();
             ContentManager = new RwContentManager();
             PermissionAuthority = new RwPermissionAuthority();
-            InstalledCommands = new Dictionary<string, CommandSentCallback>();
+            InstalledCommands = new Dictionary<string, Command>();
             StatCalculator = new RwStatCalculator();
 
             ServerCommands.Register(); // Register commands and permissions for the server

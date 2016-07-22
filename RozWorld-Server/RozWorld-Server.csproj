@@ -56,6 +56,7 @@
     <Compile Include="Accounts\RwAccountsManager.cs" />
     <Compile Include="Accounts\RwPermissionAuthority.cs" />
     <Compile Include="Accounts\RwPermissionGroup.cs" />
+    <Compile Include="Command.cs" />
     <Compile Include="ServerCommands.cs" />
     <Compile Include="Entities\RwEntityFactory.cs" />
     <Compile Include="Entities\RwPlayer.cs" />

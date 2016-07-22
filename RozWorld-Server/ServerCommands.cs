@@ -43,42 +43,44 @@ namespace Oddmatics.RozWorld.Server
 
                     // Command /kick
                     RwCore.Server.PermissionAuthority.RegisterPermission("rwcore.kick", "Kick players from the server.");
-                    RwCore.Server.RegisterCommand("kick", ServerKick);
+                    RwCore.Server.RegisterCommand("kick", ServerKick, "Kicks a player from the game.", "/kick <name>");
 
                     // Command /list
                     RwCore.Server.PermissionAuthority.RegisterPermission("rwcore.list", "Lists all visible players currently online.");
                     RwCore.Server.PermissionAuthority.RegisterPermission("rwcore.list.all", "Lists everyone online regardless of visibility.");
-                    RwCore.Server.RegisterCommand("list", ServerList);
+                    RwCore.Server.RegisterCommand("list", ServerList, "Lists online players.", "/list");
 
                     // Command /me
                     RwCore.Server.PermissionAuthority.RegisterPermission("rwcore.me", "Enacts an action in the game chat.");
-                    RwCore.Server.RegisterCommand("me", ServerMe);
+                    RwCore.Server.RegisterCommand("me", ServerMe, "Enacts an action in the game chat.", "/me [action]");
 
                     // Command /msg
                     RwCore.Server.PermissionAuthority.RegisterPermission("rwcore.msg", "Send a private message to a player.");
-                    RwCore.Server.RegisterCommand("msg", ServerPrivateMessage);
+                    RwCore.Server.RegisterCommand("msg", ServerPrivateMessage, "Sends a private message to a player",
+                        "/msg <name> [message]");
 
                     // Command /plugins
                     RwCore.Server.PermissionAuthority.RegisterPermission("rwcore.plugins", "View the installed server plugins.");
-                    RwCore.Server.RegisterCommand("plugins", ServerPlugins);
+                    RwCore.Server.RegisterCommand("plugins", ServerPlugins, "Lists the installed server plugins.", "/plugins");
 
                     // Command /say
                     RwCore.Server.PermissionAuthority.RegisterPermission("rwcore.say.*", "Full talking permissions");
                     RwCore.Server.PermissionAuthority.RegisterPermission("rwcore.say.self", "Talk in game chat.");
                     RwCore.Server.PermissionAuthority.RegisterPermission("rwcore.say.server", "Talk in game chat as the server.");
-                    RwCore.Server.RegisterCommand("say", ServerSay);
+                    RwCore.Server.RegisterCommand("say", ServerSay, "Talks in game chat as the server", "/say [message]");
 
                     // Command /slap
                     RwCore.Server.PermissionAuthority.RegisterPermission("rwcore.slap", "Slaps a player.");
-                    RwCore.Server.RegisterCommand("slap", ServerSlap);
+                    RwCore.Server.RegisterCommand("slap", ServerSlap, "Slaps a player.", "/slap <name>");
 
                     // Command /stop
                     RwCore.Server.PermissionAuthority.RegisterPermission("rwcore.stop", "Stops the server.");
-                    RwCore.Server.RegisterCommand("stop", ServerStop);
+                    RwCore.Server.RegisterCommand("stop", ServerStop, "Stops the server.", "/stop");
 
                     // Command /whisper
                     RwCore.Server.PermissionAuthority.RegisterPermission("rwcore.whisper", "Send a quick private message to a player.");
-                    RwCore.Server.RegisterCommand("whisper", ServerWhisper);
+                    RwCore.Server.RegisterCommand("whisper", ServerWhisper, "Sends a private message through game chat.",
+                        "/whisper [message]");
                 }
                 else
                     throw new InvalidOperationException("ServerCommands.Register: Commands have already been registered.");
