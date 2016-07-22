@@ -506,7 +506,9 @@ namespace Oddmatics.RozWorld.Server
                 Starting(this, EventArgs.Empty);
 
             // Store commands
-            Commands = new List<string>(InstalledCommands.Keys).AsReadOnly();
+            var commands = new List<string>(InstalledCommands.Keys);
+            commands.Sort();
+            Commands = commands.AsReadOnly();
 
             // Done loading plugins
 

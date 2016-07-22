@@ -104,9 +104,12 @@ namespace Oddmatics.RozWorld.Server
             {
                 int page = args.Count == 0 ? 1 : Convert.ToInt32(args[0]);
 
-                if (page * 10 <= commands.Count && page > 0)
+                if ((page - 1) * 10 <= commands.Count && page > 0)
                 {
-                    sender.SendMessage("Showing help page " + page.ToString() + ":");
+                    int totalPages = (int)Math.Floor(commands.Count / 10f) + 1;
+
+                    sender.SendMessage("Showing help page " + page.ToString() + "/" +
+                        totalPages.ToString() + ":");
 
                     for (int i = 0; i < 10; i++)
                     {
