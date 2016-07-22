@@ -85,7 +85,7 @@ namespace Oddmatics.RozWorld.Server
 
         public IAccountsManager AccountsManager { get; private set; }
         public string BrowserName { get; private set; }
-        public IList<string> Commands { get { return new List<string>(InstalledCommands.Keys).AsReadOnly(); } }
+        public IList<string> Commands { get; private set; }
         public IContentManager ContentManager { get; private set; }
         public string DisplayName { get { return "Server"; } }
         public Difficulty GameDifficulty { get; set; }
@@ -166,7 +166,12 @@ namespace Oddmatics.RozWorld.Server
 
         public string GetCommandDescription(string command)
         {
-            return String.Empty; // TODO: code this
+            string realCmd = command.ToLower();
+
+            if (InstalledCommands.ContainsKey(realCmd))
+                return InstalledCommands[realCmd].Description;
+
+            return String.Empty;
         }
 
         public IList<string> GetCommandsByPlugin(string plugin)
@@ -176,7 +181,12 @@ namespace Oddmatics.RozWorld.Server
 
         public string GetCommandUsage(string command)
         {
-            return String.Empty; // TODO: code this
+            string realCmd = command.ToLower();
+
+            if (InstalledCommands.ContainsKey(realCmd))
+                return InstalledCommands[realCmd].Usage;
+
+            return String.Empty;
         }
 
         public Player GetPlayer(string name)
@@ -494,6 +504,9 @@ namespace Oddmatics.RozWorld.Server
 
             if (Starting != null)
                 Starting(this, EventArgs.Empty);
+
+            // Store commands
+            Commands = new List<string>(InstalledCommands.Keys).AsReadOnly();
 
             // Done loading plugins
 

@@ -17,6 +17,7 @@ using Oddmatics.RozWorld.API.Server.Entities;
 using Oddmatics.RozWorld.API.Server.Event;
 using System;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 
 namespace Oddmatics.RozWorld.Server
 {
@@ -40,6 +41,10 @@ namespace Oddmatics.RozWorld.Server
                 {
                     // All commands
                     RwCore.Server.PermissionAuthority.RegisterPermission("rwcore.*", "Full RozWorld base permissions.");
+
+                    // Command /help
+                    RwCore.Server.RegisterCommand("help", ServerHelp, "Displays available server commands.",
+                        "/help <page> OR /help [plugin] OR /help [command]");
 
                     // Command /kick
                     RwCore.Server.PermissionAuthority.RegisterPermission("rwcore.kick", "Kick players from the server.");
@@ -89,6 +94,47 @@ namespace Oddmatics.RozWorld.Server
                 throw new InvalidOperationException("ServerCommands.Register: Cannot register commands while the server is null.");
         }
 
+
+        private static bool ServerHelp(ICommandCaller sender, IList<string> args)
+        {
+            IList<string> commands = RwCore.Server.Commands;
+
+            if (args.Count == 0 ||
+                (args.Count == 1 && new Regex("^[0-9]+$").IsMatch(args[0]))) // Show help by pages
+            {
+                int page = args.Count == 0 ? 1 : Convert.ToInt32(args[0]);
+
+                if (page * 10 <= commands.Count && page > 0)
+                {
+                    sender.SendMessage("Showing help page " + page.ToString() + ":");
+
+                    for (int i = 0; i < 10; i++)
+                    {
+                        // For instance, page 2 shows commands 10-19 of the commands IList
+                        int commandIndex = ((page - 1) * 10) + i;
+
+                        if (commandIndex < commands.Count)
+                        {
+                            string command = commands[commandIndex];
+                            sender.SendMessage("/" + command + " - " +
+                                RwCore.Server.GetCommandDescription(command));
+                        }
+                        else
+                            return true; // Reached the last command in the IList
+                    }
+
+                    return true;
+                }
+
+                sender.SendMessage("That page is empty.");
+            }
+            else if (args.Count >= 1) // Search by name of command/plugin
+            {
+                sender.SendMessage("Searching by name not yet implemented!");
+            }
+
+            return false;
+        }
 
         /// <summary>
         /// [Command Callback] Handles the /kick command.
