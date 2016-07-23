@@ -364,14 +364,15 @@ namespace Oddmatics.RozWorld.Server
                 }
 
                 // Call the attached command delegate - commands are all lowercase
-                InstalledCommands[realCmd].Delegate(sender, args.AsReadOnly());
+                if (InstalledCommands.ContainsKey(realCmd))
+                    InstalledCommands[realCmd].Delegate(sender, args.AsReadOnly());
+                else
+                {
+                    Logger.Out("[ERR] Unknown command.");
+                    return false;
+                }
 
                 return true;
-            }
-            catch (KeyNotFoundException ex)
-            {
-                Logger.Out("[ERR] Unknown command.");
-                return false;
             }
             catch (Exception ex)
             {
