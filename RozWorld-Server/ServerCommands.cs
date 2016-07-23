@@ -42,6 +42,9 @@ namespace Oddmatics.RozWorld.Server
                     // All commands
                     RwCore.Server.PermissionAuthority.RegisterPermission("rwcore.*", "Full RozWorld base permissions.");
 
+                    // World building stuff
+                    RwCore.Server.PermissionAuthority.RegisterPermission("rwcore.build.*", "Full world building rights.");
+
                     // Command /help
                     RwCore.Server.RegisterCommand("help", ServerHelp, "Displays available server commands.",
                         "/help <page> OR /help [plugin] OR /help [command]");
@@ -63,6 +66,25 @@ namespace Oddmatics.RozWorld.Server
                     RwCore.Server.PermissionAuthority.RegisterPermission("rwcore.msg", "Send a private message to a player.");
                     RwCore.Server.RegisterCommand("msg", ServerPrivateMessage, "Sends a private message to a player",
                         "/msg <name> [message]");
+
+                    // Command /perms
+                    RwCore.Server.PermissionAuthority.RegisterPermission("rwcore.perms.*", "Full permission editing rights.");
+
+                    RwCore.Server.PermissionAuthority.RegisterPermission("rwcore.perms.groups.*", "Full permission group editing rights.");
+                    RwCore.Server.PermissionAuthority.RegisterPermission("rwcore.perms.groups.list", "List all permission groups.");
+                    RwCore.Server.PermissionAuthority.RegisterPermission("rwcore.perms.groups.manage", "Create or delete permission groups.");
+                    RwCore.Server.PermissionAuthority.RegisterPermission("rwcore.perms.groups.prefixes", "Edit permission group prefixes.");
+                    RwCore.Server.PermissionAuthority.RegisterPermission("rwcore.perms.groups.rights", "Edit permission group rights.");
+                    RwCore.Server.PermissionAuthority.RegisterPermission("rwcore.perms.groups.suffixes", "Edit permission group suffixes.");
+                    
+                    RwCore.Server.PermissionAuthority.RegisterPermission("rwcore.perms.players.*", "Full player permission editing rights.");
+                    RwCore.Server.PermissionAuthority.RegisterPermission("rwcore.perms.players.assign", "Assign players to permission groups.");
+                    RwCore.Server.PermissionAuthority.RegisterPermission("rwcore.perms.players.prefixes", "Edit player prefixes.");
+                    RwCore.Server.PermissionAuthority.RegisterPermission("rwcore.perms.players.rights", "Edit player rights.");
+                    RwCore.Server.PermissionAuthority.RegisterPermission("rwcore.perms.players.suffixes", "Edit player suffixes.");
+
+                    RwCore.Server.RegisterCommand("perms", ServerPermissions, "View or edit group or player permissions.",
+                        "Use /perms ? for full help.");
 
                     // Command /plugins
                     RwCore.Server.PermissionAuthority.RegisterPermission("rwcore.plugins", "View the installed server plugins.");
@@ -268,6 +290,34 @@ namespace Oddmatics.RozWorld.Server
 
             sender.SendMessage(ChatColour.RED + ERROR_INVALID_PERMISSIONS + cmdName + ".");
             return false;
+        }
+
+        /// <summary>
+        /// [Command Callback] Handles the /perms command.
+        /// </summary>
+        private static bool ServerPermissions(ICommandCaller sender, IList<string> args)
+        {
+            const string cmdName = "/perms";
+
+            if (args.Count == 0)
+            {
+                sender.SendMessage("Invalid length args specified, for help, use '" +
+                    ChatColour.YELLOW + cmdName + " ?" + ChatColour.DEFAULT + "'.");
+
+                return true;
+            }
+
+            switch (args[0])
+            {
+                case "?":
+                    sender.SendMessage("This is where help will be in future, this command is incomplete currently.");
+                    return true;
+
+                default:
+                    sender.SendMessage("Do not recognise command '" + args[0] + "', use '"
+                        + ChatColour.YELLOW + cmdName + " ?" + ChatColour.DEFAULT + "' for help.");
+                    return false;
+            }
         }
 
         /// <summary>
