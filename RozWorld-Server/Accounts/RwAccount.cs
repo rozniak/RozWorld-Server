@@ -44,12 +44,9 @@ namespace Oddmatics.RozWorld.Server.Accounts
         public IPAddress CurrentIP;
         public string DisplayName
         {
-            get { return AccountFile.GetDisplayName(); }
-            set
-            {
-                if (RwPlayer.ValidName(value))
-                    AccountFile.SetDisplayName(value);
-            }
+            // TODO: code this
+            get { return String.Empty; }
+            set { }
         }
         public IPAddress LastLoginIP
         {
@@ -142,7 +139,7 @@ namespace Oddmatics.RozWorld.Server.Accounts
         public byte LogIn(byte[] passwordHash, long utcHashTime)
         {
             if (!Exists)
-                return ErrorMessage.ACCOUNT_NAME_TAKEN;
+                return ErrorMessage.INCORRECT_LOGIN;
 
             if (LoggedIn)
                 return ErrorMessage.INTERNAL_ERROR;

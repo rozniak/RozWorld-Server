@@ -20,6 +20,5 @@ game-mode:books
 difficulty:3
 
 # Player settings
-default-group:normal
 enable-clans:true
 max-clan-members:10

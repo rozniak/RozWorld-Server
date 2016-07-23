@@ -299,10 +299,6 @@ namespace Oddmatics.RozWorld.Server
                         break;
 
                         // Player settings
-                    case "default-group":
-                        PermissionAuthority.DefaultGroupName = item.Value;
-                        break;
-
                     case "enable-clans":
                         // TODO: put in clan manager
                         break;
@@ -646,9 +642,9 @@ namespace Oddmatics.RozWorld.Server
                             result = ErrorMessage.INTERNAL_ERROR; // Update error message since it was a failure
                         }
                     }
-                    else
-                        result = ErrorMessage.ACCOUNT_NAME_TAKEN; // Bot rules over everything
                 }
+                else
+                    result = ErrorMessage.ACCOUNT_NAME_TAKEN; // Bot rules over everything
             }
             else
                 result = ErrorMessage.HASHTIME_INVALID;
