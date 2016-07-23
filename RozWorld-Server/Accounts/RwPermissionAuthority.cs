@@ -11,8 +11,10 @@
 
 using Oddmatics.RozWorld.API.Generic;
 using Oddmatics.RozWorld.API.Server.Accounts;
+using Oddmatics.RozWorld.Formats;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text.RegularExpressions;
 
 namespace Oddmatics.RozWorld.Server.Accounts
@@ -23,14 +25,16 @@ namespace Oddmatics.RozWorld.Server.Accounts
         public IList<string> GroupNames { get { return new List<string>(GroupRegistry.Keys).AsReadOnly(); } }
         public IList<string> RegisteredPermissions { get { return new List<string>(PermissionRegistry.Keys).AsReadOnly(); } }
 
-        private Dictionary<string, PermissionInfo> PermissionRegistry;
         private Dictionary<string, IPermissionGroup> GroupRegistry;
+        private bool Loaded;
+        private Dictionary<string, PermissionInfo> PermissionRegistry;
 
 
         public RwPermissionAuthority()
         {
-            PermissionRegistry = new Dictionary<string, PermissionInfo>();
             GroupRegistry = new Dictionary<string, IPermissionGroup>();
+            Loaded = false;
+            PermissionRegistry = new Dictionary<string, PermissionInfo>();
         }
 
 
@@ -45,32 +49,84 @@ namespace Oddmatics.RozWorld.Server.Accounts
                 GroupRegistry.Add(realName, newGroup);
                 return newGroup;
             }
-            else
-                throw new ArgumentException("A permission group with the same name already exists.");
+
+            return null;
         }
 
         public IPermissionGroup GetGroup(string name)
         {
-            return GroupRegistry[name];
+            string realName = name.ToLower();
+
+            if (GroupRegistry.ContainsKey(realName))
+                return GroupRegistry[realName];
+
+            return null;
         }
 
-        public PermissionInfo GetPermissionInfo(string key)
+        public PermissionInfo? GetPermissionInfo(string key)
         {
-            return PermissionRegistry[key];
+            string realKey = key.ToLower();
+
+            if (PermissionRegistry.ContainsKey(realKey))
+                return PermissionRegistry[realKey];
+
+            return null;
+        }
+
+        public void Load()
+        {
+            if (Loaded)
+                throw new InvalidOperationException("RwPermissionAuthority.Load: Already loaded.");
+
+            if (RwCore.Server == null || RwCore.Server.PermissionAuthority != this)
+                throw new InvalidOperationException("RwPermissionAuthority.Load: Server has not been set up correctly yet.");
+
+            string[] groupFiles = Directory.GetFiles(RwServer.DIRECTORY_PERMISSIONS, "group-*.json");
+
+            foreach (string filename in groupFiles)
+            {
+                try
+                {
+                    var file = PermissionGroupFile.FromFile(filename);
+                    string realName = file.Name.ToLower();
+
+                    if (GroupRegistry.ContainsKey(realName))
+                    {
+                        RwCore.Server.Logger.Out("[WARNING] (PermGroups) Duplicate group entry for '"
+                            + file.Name + "'.");
+                        GroupRegistry.Remove(realName);
+                    }
+
+                    var group = new RwPermissionGroup(file);
+                    GroupRegistry.Add(group.Name, group);
+
+                    if (group.Default)
+                        DefaultGroupName = group.Name;
+                }
+                catch (Exception ex)
+                {
+                    RwCore.Server.Logger.Out("[ERR] (PermGroups) Failed to load '" + filename + "'.");
+                    RwCore.Server.Logger.Out(ex.Message);
+                    RwCore.Server.Logger.Out(ex.StackTrace);
+                }
+                
+            }
+
+            Loaded = true;
         }
 
         public bool RegisterPermission(string key, string description)
         {
             string realKey = key.ToLower();
             var server = (RwServer)RwCore.Server;
-            var syntaxCheck = new Regex(@"^([a-z]+\.)+(([a-z]+)|\*)$");
+            var syntaxCheck = new Regex(@"^([a-z]+\.)+(([a-z]+))$");
 
             if (!syntaxCheck.IsMatch(realKey))
-                throw new ArgumentException("Invalid format for permission key.");
+                throw new ArgumentException("RwPermissionAuthority.RegisterPermission: Invalid format for permission key.");
 
             if (server.HasStarted)
-                throw new InvalidOperationException("The server has already been started, permissions must be " +
-                    "registered in the starting up phase.");
+                throw new InvalidOperationException("RwPermissionAuthority.RegisterPermission: The server has already" +
+                    "been started, permissions must be registered in the starting up phase.");
 
             if (!PermissionRegistry.ContainsKey(realKey))
             {
@@ -78,7 +134,6 @@ namespace Oddmatics.RozWorld.Server.Accounts
                 PermissionRegistry.Add(realKey, permInfo);
                 return true;
             }
-
 
             return false;
         }

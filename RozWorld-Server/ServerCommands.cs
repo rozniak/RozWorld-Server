@@ -39,11 +39,8 @@ namespace Oddmatics.RozWorld.Server
             {
                 if (!Registered)
                 {
-                    // All commands
-                    RwCore.Server.PermissionAuthority.RegisterPermission("rwcore.*", "Full RozWorld base permissions.");
-
                     // World building stuff
-                    RwCore.Server.PermissionAuthority.RegisterPermission("rwcore.build.*", "Full world building rights.");
+                    RwCore.Server.PermissionAuthority.RegisterPermission("rwcore.build", "Full world building rights.");
 
                     // Command /help
                     RwCore.Server.RegisterCommand("help", ServerHelp, "Displays available server commands.",
@@ -68,16 +65,12 @@ namespace Oddmatics.RozWorld.Server
                         "/msg <name> [message]");
 
                     // Command /perms
-                    RwCore.Server.PermissionAuthority.RegisterPermission("rwcore.perms.*", "Full permission editing rights.");
-
-                    RwCore.Server.PermissionAuthority.RegisterPermission("rwcore.perms.groups.*", "Full permission group editing rights.");
                     RwCore.Server.PermissionAuthority.RegisterPermission("rwcore.perms.groups.list", "List all permission groups.");
                     RwCore.Server.PermissionAuthority.RegisterPermission("rwcore.perms.groups.manage", "Create or delete permission groups.");
                     RwCore.Server.PermissionAuthority.RegisterPermission("rwcore.perms.groups.prefixes", "Edit permission group prefixes.");
                     RwCore.Server.PermissionAuthority.RegisterPermission("rwcore.perms.groups.rights", "Edit permission group rights.");
                     RwCore.Server.PermissionAuthority.RegisterPermission("rwcore.perms.groups.suffixes", "Edit permission group suffixes.");
                     
-                    RwCore.Server.PermissionAuthority.RegisterPermission("rwcore.perms.players.*", "Full player permission editing rights.");
                     RwCore.Server.PermissionAuthority.RegisterPermission("rwcore.perms.players.assign", "Assign players to permission groups.");
                     RwCore.Server.PermissionAuthority.RegisterPermission("rwcore.perms.players.prefixes", "Edit player prefixes.");
                     RwCore.Server.PermissionAuthority.RegisterPermission("rwcore.perms.players.rights", "Edit player rights.");
@@ -91,7 +84,7 @@ namespace Oddmatics.RozWorld.Server
                     RwCore.Server.RegisterCommand("plugins", ServerPlugins, "Lists the installed server plugins.", "/plugins");
 
                     // Command /say
-                    RwCore.Server.PermissionAuthority.RegisterPermission("rwcore.say.*", "Full talking permissions");
+                    RwCore.Server.PermissionAuthority.RegisterPermission("rwcore.say.muted", "Talk when the server is muted.");
                     RwCore.Server.PermissionAuthority.RegisterPermission("rwcore.say.self", "Talk in game chat.");
                     RwCore.Server.PermissionAuthority.RegisterPermission("rwcore.say.server", "Talk in game chat as the server.");
                     RwCore.Server.RegisterCommand("say", ServerSay, "Talks in game chat as the server", "/say [message]");
@@ -307,10 +300,29 @@ namespace Oddmatics.RozWorld.Server
                 return true;
             }
 
-            switch (args[0])
+            switch (args[0].ToLower())
             {
                 case "?":
                     sender.SendMessage("This is where help will be in future, this command is incomplete currently.");
+                    return true;
+
+                case "list":
+                    // TODO: Improve this, add pages
+
+                    IList<string> groups = RwCore.Server.PermissionAuthority.GroupNames;
+
+                    string message = "Showing groups (" + groups.Count.ToString() + "): ";
+
+                    for (int i = 0; i < groups.Count; i++)
+                    {
+                        message += groups[i];
+
+                        if (i < groups.Count - 1)
+                            message += ", ";
+                    }
+
+                    sender.SendMessage(message);
+
                     return true;
 
                 default:

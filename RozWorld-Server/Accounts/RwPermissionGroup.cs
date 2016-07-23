@@ -12,7 +12,11 @@
 using Oddmatics.RozWorld.API.Generic;
 using Oddmatics.RozWorld.API.Generic.Chat;
 using Oddmatics.RozWorld.API.Server.Accounts;
+using Oddmatics.RozWorld.Formats;
+using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace Oddmatics.RozWorld.Server.Accounts
 {
@@ -40,6 +44,48 @@ namespace Oddmatics.RozWorld.Server.Accounts
             get { return _Permissions.AsReadOnly(); }
         }
 
+        private string _Name;
+        public string Name
+        {
+            get { return _Name; }
+            set
+            {
+                string realValue = value.ToLower();
+
+                if (_Name == String.Empty)
+                    _Name = realValue;
+                else if (RwCore.Server.PermissionAuthority.GetGroup(realValue) == this)
+                    _Name = realValue;
+            }
+        }
+        public bool Default { get; set; }
+        private PermissionGroupFile File;
+
+
+        public RwPermissionGroup()
+        {
+            ChatPrefix = String.Empty;
+            ChatSuffix = String.Empty;
+            ColourModifier = ChatColour.DEFAULT;
+            Default = false;
+            _Name = String.Empty;
+            _Members = new List<IAccount>();
+            _Permissions = new List<string>();
+            File = new PermissionGroupFile();
+        }
+
+        public RwPermissionGroup(PermissionGroupFile data)
+        {
+            ChatPrefix = data.Prefix;
+            ChatSuffix = data.Suffix;
+            ColourModifier = data.Colour;
+            Default = data.Default;
+            _Name = data.Name;
+            _Members = new List<IAccount>();
+            _Permissions = new List<string>(data.Permissions);
+            File = data;
+        }
+
 
         public bool AddPermission(string key)
         {
@@ -56,7 +102,33 @@ namespace Oddmatics.RozWorld.Server.Accounts
 
         public bool HasPermission(string key)
         {
-            return _Permissions.Contains(key.ToLower());
+            string realKey = key.ToLower();
+            string keyCheck = String.Empty;
+            string[] keySplit = realKey.Split('.');
+
+            if (_Permissions.Contains("*"))
+                return true;
+
+            for (int i = 0; i < keySplit.Length; i++)
+            {
+                keyCheck += keySplit[i];
+
+                if (i < keySplit.Length - 1)
+                {
+                    if (_Permissions.Contains(keyCheck + ".*"))
+                        return true;
+                }
+                else
+                {
+                    if (_Permissions.Contains(keyCheck) ||
+                        _Permissions.Contains(keyCheck + ".*"))
+                        return true;
+                }
+
+                keyCheck += ".";
+            }
+
+            return false; // Failed to match
         }
 
         public void RecalculateMembers()

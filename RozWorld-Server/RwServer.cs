@@ -454,6 +454,7 @@ namespace Oddmatics.RozWorld.Server
             InstalledCommands = new Dictionary<string, Command>();
             StatCalculator = new RwStatCalculator();
 
+            ((RwPermissionAuthority)PermissionAuthority).Load(); // Load perm groups
             ServerCommands.Register(); // Register commands and permissions for the server
 
             Logger.Out("[STAT] Setting configs...");
