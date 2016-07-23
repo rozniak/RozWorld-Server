@@ -95,6 +95,9 @@ namespace Oddmatics.RozWorld.Server
         }
 
 
+        /// <summary>
+        /// [Command Callback] Handles the /help command.
+        /// </summary>
         private static bool ServerHelp(ICommandCaller sender, IList<string> args)
         {
             IList<string> commands = RwCore.Server.Commands;
@@ -106,7 +109,7 @@ namespace Oddmatics.RozWorld.Server
 
                 if ((page - 1) * 10 <= commands.Count && page > 0)
                 {
-                    int totalPages = (int)Math.Floor(commands.Count / 10f) + 1;
+                    int totalPages = (int)Math.Ceiling(commands.Count / 10F);
 
                     sender.SendMessage("Showing help page " + page.ToString() + "/" +
                         totalPages.ToString() + ":");

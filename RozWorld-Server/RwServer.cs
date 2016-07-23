@@ -612,7 +612,7 @@ namespace Oddmatics.RozWorld.Server
             if (BannedIPs.Contains(logInPacket.SenderEndPoint.Address) ||
                 BannedAccountNames.Contains(logInPacket.Username))
                 result = ErrorMessage.BANNED;
-            else if (logInPacket.ValidHashTime())
+            else if (logInPacket.ValidHashTime)
             {
                 // TODO: Revise a LOT of this code to work with both bots and real users :)
 
@@ -647,7 +647,6 @@ namespace Oddmatics.RozWorld.Server
                     else
                         result = ErrorMessage.ACCOUNT_NAME_TAKEN; // Bot rules over everything
                 }
-                
             }
             else
                 result = ErrorMessage.HASHTIME_INVALID;

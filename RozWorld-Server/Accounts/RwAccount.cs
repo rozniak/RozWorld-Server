@@ -75,18 +75,28 @@ namespace Oddmatics.RozWorld.Server.Accounts
 
 
         private AccountFile AccountFile;
+        private bool Exists;
         public bool LoggedIn { get; private set; }
         private Dictionary<string, PermissionState> PermissionStates;
         public static bool ServerAccountCreated { get; private set; }
 
 
-        public RwAccount(string accountPath)
+        public RwAccount(string username)
         {
-            AccountFile = new AccountFile(accountPath);
-            PermissionGroup = RwCore.Server.PermissionAuthority
-                .GetGroup(RwCore.Server.PermissionAuthority.DefaultGroupName);
-            PermissionStates = new Dictionary<string, PermissionState>(); // TODO: load this
+            string realUsername = username.ToLower();
+            string[] filesDetected = Directory.GetFiles(RwServer.DIRECTORY_ACCOUNTS, realUsername + ".*.acc");
+
+            Exists = false;
             LoggedIn = false;
+
+            if (filesDetected.Length == 1)
+            {
+                AccountFile = new AccountFile(filesDetected[0]);
+                PermissionGroup = RwCore.Server.PermissionAuthority
+                    .GetGroup(RwCore.Server.PermissionAuthority.DefaultGroupName);
+                PermissionStates = new Dictionary<string, PermissionState>(); // TODO: load this
+                Exists = true;
+            }
         }
 
 
@@ -131,8 +141,11 @@ namespace Oddmatics.RozWorld.Server.Accounts
 
         public byte LogIn(byte[] passwordHash, long utcHashTime)
         {
+            if (!Exists)
+                return ErrorMessage.ACCOUNT_NAME_TAKEN;
+
             if (LoggedIn)
-                return ErrorMessage.INTERNAL_ERROR; // Should not happen
+                return ErrorMessage.INTERNAL_ERROR;
 
             var saltedPass = new List<byte>(AccountFile.PasswordHash);
             saltedPass.AddRange(utcHashTime.GetBytes());
