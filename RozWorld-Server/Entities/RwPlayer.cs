@@ -38,10 +38,13 @@ namespace Oddmatics.RozWorld.Server.Entities
 
             set // TODO: add some verif on value!!
             {
-                if (IsRealPlayer)
-                    Account.DisplayName = value;
-                else
-                    _DisplayName = value;
+                if (ValidName(value))
+                {
+                    if (IsRealPlayer)
+                        Account.DisplayName = value;
+                    else
+                        _DisplayName = value;
+                }
             }
         }
         public override IInventory Inventory { get; set; }

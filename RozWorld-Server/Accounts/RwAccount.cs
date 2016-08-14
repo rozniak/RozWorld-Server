@@ -29,10 +29,14 @@ namespace Oddmatics.RozWorld.Server.Accounts
 {
     public class RwAccount : IAccount
     {
+
+        public string ChatPrefix { get; set; }
+        public string ChatSuffix { get; set; }
         public IClan Clan
         {
             get { throw new NotImplementedException(); }
         }
+        public string ColourModifier { get; set; }
         public DateTime CreationDate
         {
             get { return AccountFile.CreationDate; }
@@ -81,17 +85,57 @@ namespace Oddmatics.RozWorld.Server.Accounts
         public RwAccount(string username)
         {
             string realUsername = username.ToLower();
-            string[] filesDetected = Directory.GetFiles(RwServer.DIRECTORY_ACCOUNTS, realUsername + ".*.acc");
+            string[] accountFiles = Directory.GetFiles(RwServer.DIRECTORY_ACCOUNTS,
+                realUsername + ".*.acc");
+            string[] permFiles = Directory.GetFiles(RwServer.DIRECTORY_PERMISSIONS,
+                "player-" + realUsername + ".acc");
 
             Exists = false;
             LoggedIn = false;
 
-            if (filesDetected.Length == 1)
+            if (accountFiles.Length == 1)
             {
-                AccountFile = new AccountFile(filesDetected[0]);
+                AccountFile = new AccountFile(accountFiles[0]);
+
+                if (permFiles.Length == 0)
+                {
+                    ((RwPermissionAuthority)RwCore.Server.PermissionAuthority)
+                        .CreateDefaultPlayerFile(username);
+                }
+
+                var permFile = PlayerPermissionFile.FromFile(permFiles[0]);
+
+                if (!permFile.Name.EqualsIgnoreCase(Username)) // Check for name mismatch
+                    RwCore.Server.Logger.Out("[WARN] Permission file for " + Username + ", 'name' value mismatch. This may or may not be intended.");
+
+                ChatPrefix = permFile.Prefix;
+                ChatSuffix = permFile.Suffix;
+                ColourModifier = permFile.Colour;
                 PermissionGroup = RwCore.Server.PermissionAuthority
-                    .GetGroup(RwCore.Server.PermissionAuthority.DefaultGroupName);
-                PermissionStates = new Dictionary<string, PermissionState>(); // TODO: load this
+                    .GetGroup(permFile.Group);
+
+                PermissionStates = new Dictionary<string, PermissionState>();
+
+                // Add permission states, this is ordered by "Allow, Deny"
+
+                foreach (string perm in permFile.Granted) // Allow
+                {
+                    string realPerm = perm.ToLower();
+
+                    if (RwCore.Server.PermissionAuthority.RegisteredPermissions.Contains(realPerm))
+                        PermissionStates.Add(realPerm, PermissionState.Granted);
+                }
+
+                foreach (string perm in permFile.Denied) // Deny
+                {
+                    string realPerm = perm.ToLower();
+
+                    if (RwCore.Server.PermissionAuthority.RegisteredPermissions.Contains(realPerm))
+                        PermissionStates.Add(realPerm, PermissionState.Denied);
+                }
+
+                // TODO: Ensure this is everything
+
                 Exists = true;
             }
         }

@@ -16,6 +16,7 @@ using Oddmatics.RozWorld.API.Server.Accounts;
 using Oddmatics.RozWorld.API.Server.Entities;
 using Oddmatics.RozWorld.API.Server.Event;
 using Oddmatics.RozWorld.API.Server.Game;
+using Oddmatics.RozWorld.API.Server.Game.Economy;
 using Oddmatics.RozWorld.API.Server.Level;
 using Oddmatics.RozWorld.Net.Packets;
 using Oddmatics.RozWorld.Net.Packets.Event;
@@ -88,6 +89,7 @@ namespace Oddmatics.RozWorld.Server
         public IList<string> Commands { get; private set; }
         public IContentManager ContentManager { get; private set; }
         public string DisplayName { get { return "Server"; } }
+        public IEconomySystem EconomySystem { get; private set; }
         public Difficulty GameDifficulty { get; set; }
         public GameMode GameMode { get; private set; }
         public ushort HostingPort { get; private set; }

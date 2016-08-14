@@ -164,7 +164,7 @@ namespace Oddmatics.RozWorld.Server
         {
             const string cmdName = "/kick";
 
-            if (sender.HasPermission("rwcore.*") || sender.HasPermission("rwcore.kick"))
+            if (sender.HasPermission("rwcore.kick"))
             {
                 if (args.Count == 0)
                 {
@@ -207,7 +207,7 @@ namespace Oddmatics.RozWorld.Server
 
             const string cmdName = "/list";
 
-            if (sender.HasPermission("rwcore.*") || sender.HasPermission("rwcore.list"))
+            if (sender.HasPermission("rwcore.list"))
             {
                 IList<Player> onlinePlayers = RwCore.Server.OnlinePlayers;
 
@@ -261,7 +261,7 @@ namespace Oddmatics.RozWorld.Server
         {
             const string cmdName = "/me";
 
-            if (sender.HasPermission("rwcore.*") || sender.HasPermission("rwcore.me"))
+            if (sender.HasPermission("rwcore.me"))
             {
                 if (args.Count == 0)
                 {
@@ -339,7 +339,7 @@ namespace Oddmatics.RozWorld.Server
         {
             const string cmdName = "/plugins";
 
-            if (sender.HasPermission("rwcore.*") || sender.HasPermission("rwcore.plugins"))
+            if (sender.HasPermission("rwcore.plugins"))
             {
                 IList<IPlugin> plugins = RwCore.Server.Plugins;
                 string message = "Installed plugins (" + plugins.Count + "): ";
@@ -367,7 +367,7 @@ namespace Oddmatics.RozWorld.Server
         {
             const string cmdName = "/msg";
 
-            if (sender.HasPermission("rwcore.*") || sender.HasPermission("rwcore.msg"))
+            if (sender.HasPermission("rwcore.msg"))
             {
                 if (args.Count <= 1)
                 {
@@ -409,8 +409,7 @@ namespace Oddmatics.RozWorld.Server
         {
             const string cmdName = "/say";
 
-            if (sender.HasPermission("rwcore.*") || sender.HasPermission("rwcore.say.*") ||
-                sender.HasPermission("rwcore.say.server"))
+            if (sender.HasPermission("rwcore.say.server"))
             {
                 if (args.Count == 0)
                 {
@@ -441,7 +440,7 @@ namespace Oddmatics.RozWorld.Server
         {
             const string cmdName = "/slap";
 
-            if (sender.HasPermission("rwcore.*") || sender.HasPermission("rwcore.slap"))
+            if (sender.HasPermission("rwcore.slap"))
             {
                 if (args.Count != 1)
                 {
@@ -474,7 +473,7 @@ namespace Oddmatics.RozWorld.Server
         {
             const string cmdName = "/stop";
 
-            if (sender.HasPermission("rwcore.*") || sender.HasPermission("rwcore.stop"))
+            if (sender.HasPermission("rwcore.stop"))
             {
                 ((RwServer)RwCore.Server).Stop();
                 return true;
@@ -491,7 +490,7 @@ namespace Oddmatics.RozWorld.Server
         {
             const string cmdName = "/whisper";
 
-            if (sender.HasPermission("rwcore.*") || sender.HasPermission("rwcore.whisper"))
+            if (sender.HasPermission("rwcore.whisper"))
             {
                 if (args.Count <= 1)
                 {

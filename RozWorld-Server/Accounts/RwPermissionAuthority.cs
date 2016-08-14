@@ -10,6 +10,7 @@
  */
 
 using Oddmatics.RozWorld.API.Generic;
+using Oddmatics.RozWorld.API.Generic.Chat;
 using Oddmatics.RozWorld.API.Server.Accounts;
 using Oddmatics.RozWorld.Formats;
 using System;
@@ -37,6 +38,29 @@ namespace Oddmatics.RozWorld.Server.Accounts
             PermissionRegistry = new Dictionary<string, PermissionInfo>();
         }
 
+
+        public void CreateDefaultPlayerFile(string name)
+        {
+            string realName = name.ToLower();
+
+            // Make sure the account exists first
+            if (Directory.GetFiles(RwServer.DIRECTORY_ACCOUNTS, realName + ".*.acc").Length == 1)
+            {
+                var permFile = new PlayerPermissionFile();
+
+                permFile.Colour = ChatColour.DEFAULT;
+                permFile.Denied = new string[] { };
+                permFile.Granted = new string[] { };
+                permFile.Group = DefaultGroupName;
+                permFile.Name = name;
+                permFile.Prefix = String.Empty;
+                permFile.Suffix = String.Empty;
+
+                permFile.Save(RwServer.DIRECTORY_PERMISSIONS + "\\player-" + realName + ".json");
+            }
+            else
+                throw new ArgumentException("RwPermissionAuthority.CreateDefaultPlayerFile: Player username does not exist!");
+        }
 
         public IPermissionGroup CreateNewGroup(string name)
         {
