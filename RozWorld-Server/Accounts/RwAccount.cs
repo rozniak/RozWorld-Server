@@ -122,7 +122,7 @@ namespace Oddmatics.RozWorld.Server.Accounts
             string[] accountFiles = Directory.GetFiles(RwServer.DIRECTORY_ACCOUNTS,
                 realUsername + ".*.acc");
             string[] permFiles = Directory.GetFiles(RwServer.DIRECTORY_PERMISSIONS,
-                "player-" + realUsername + ".acc");
+                "player-" + realUsername + ".json");
 
             Exists = false;
             LoggedIn = false;
@@ -135,6 +135,8 @@ namespace Oddmatics.RozWorld.Server.Accounts
                 {
                     ((RwPermissionAuthority)RwCore.Server.PermissionAuthority)
                         .CreateDefaultPlayerFile(username);
+                    permFiles = Directory.GetFiles(RwServer.DIRECTORY_PERMISSIONS,
+                        "player-" + realUsername + ".json"); // Update permFiles listing
                 }
 
                 var permFile = PlayerPermissionFile.FromFile(permFiles[0]);
