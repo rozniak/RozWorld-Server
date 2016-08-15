@@ -29,7 +29,6 @@ namespace Oddmatics.RozWorld.Server.Accounts
 {
     public class RwAccount : IAccount
     {
-
         public string ChatPrefix { get; set; }
         public string ChatSuffix { get; set; }
         public IClan Clan
@@ -48,9 +47,44 @@ namespace Oddmatics.RozWorld.Server.Accounts
         public IPAddress CurrentIP;
         public string DisplayName
         {
-            // TODO: code this
-            get { return String.Empty; }
-            set { }
+            get { return AccountFile.DisplayName; }
+            set
+            {
+                // Validation - ensure account file safety
+                if (RwPlayer.ValidName(value))
+                {
+                    string realDisplayName = DisplayName.ToLower();
+                    string realUsername = Username.ToLower();
+                    string realValue = value.ToLower();
+
+                    // Check if name already in use
+                    if (Directory.GetFiles(RwServer.DIRECTORY_ACCOUNTS, "*." + realValue + ".acc").Length == 0)
+                    {
+                        // Update filesystem
+                        try
+                        {
+                            string oldFile = RwServer.DIRECTORY_ACCOUNTS + "\\" + realUsername +
+                                "." + DisplayName + ".acc";
+
+                            if (File.Exists(oldFile))
+                                File.Delete(oldFile);
+
+                            AccountFile.Save(RwServer.DIRECTORY_ACCOUNTS + "\\" + realUsername + "." +
+                                realValue + ".acc");
+                        }
+                        catch (Exception ex)
+                        {
+                            // Some error, log it and do not continue the changes
+                            RwCore.Server.Logger.Out("[ERR] Problem whilst changing display name for user '" +
+                                Username + "', exception: " + ex.Message);
+                            RwCore.Server.Logger.Out("[ERR] Stack trace: " + ex.StackTrace);
+                        }
+                    }
+                    else
+                        RwCore.Server.Logger.Out("[ERR] Failed to set new display name for user '" + Username +
+                            "': name value is already in use!");
+                }
+            }
         }
         public IPAddress LastLoginIP
         {
