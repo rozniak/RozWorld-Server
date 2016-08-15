@@ -170,8 +170,6 @@ namespace Oddmatics.RozWorld.Server.Accounts
                         PermissionStates.Add(realPerm, PermissionState.Denied);
                 }
 
-                // TODO: Ensure this is everything
-
                 Exists = true;
             }
         }
@@ -269,10 +267,12 @@ namespace Oddmatics.RozWorld.Server.Accounts
 
         public bool SetPermissionGroup(string name)
         {
-            if (!RwCore.Server.PermissionAuthority.GroupNames.Contains(name))
+            string realName = name.ToLower();
+
+            if (!RwCore.Server.PermissionAuthority.GroupNames.Contains(realName))
                 return false;
 
-            PermissionGroup = RwCore.Server.PermissionAuthority.GetGroup(name);
+            PermissionGroup = RwCore.Server.PermissionAuthority.GetGroup(realName);
             return true;
         }
 

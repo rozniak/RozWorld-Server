@@ -15,6 +15,7 @@ using Oddmatics.RozWorld.API.Server;
 using Oddmatics.RozWorld.API.Server.Accounts;
 using Oddmatics.RozWorld.API.Server.Entities;
 using Oddmatics.RozWorld.API.Server.Event;
+using Oddmatics.RozWorld.Server.Entities;
 using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
@@ -248,6 +249,8 @@ namespace Oddmatics.RozWorld.Server
 
                 sender.SendMessage(onlinePlayers.Count.ToString() + " currently online players:");
                 sender.SendMessage(playerList + ".");
+
+                return true;
             }
 
             sender.SendMessage(ChatColour.RED + ERROR_INVALID_PERMISSIONS + cmdName + ".");
@@ -304,6 +307,26 @@ namespace Oddmatics.RozWorld.Server
             {
                 case "?":
                     sender.SendMessage("This is where help will be in future, this command is incomplete currently.");
+                    return true;
+
+                case "player":
+                    // TODO: this requires GetPlayerAbsolute to work
+                    // so it will be done more a lot later
+
+                    if (args.Count < 4)
+                    {
+                        sender.SendMessage("Invalid length args specified, for help, use '" +
+                            ChatColour.YELLOW + cmdName + "?" + ChatColour.DEFAULT + "'.");
+
+                        return true;
+                    }
+
+                    RwPlayer player = (RwPlayer)RwCore.Server.GetPlayerAbsolute(args[2].ToLower());
+
+                    IList<string> perms = player.Account.Permissions;
+
+                    // TODO: finish this
+
                     return true;
 
                 case "list":
