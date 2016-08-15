@@ -636,6 +636,12 @@ namespace Oddmatics.RozWorld.Server
                             RwPlayer player = account.InstatePlayerInstance(client);
                             OnlineRealPlayers.Add(realUsername, player);
                             AccountNameFromDisplay.Add(player.DisplayName.ToLower(), realUsername);
+
+                            if (PlayerLogIn != null)
+                                PlayerLogIn(this, new PlayerLogInEventArgs(player));
+
+                            Logger.Out("[STAT/LOGIN] Player '" + logInPacket.Username + "' has logged on! " +
+                                "(from " + logInPacket.SenderEndPoint.ToString() + ")");
                         }
                         else
                         {
