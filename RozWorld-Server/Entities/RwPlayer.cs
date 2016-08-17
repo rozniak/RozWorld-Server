@@ -47,6 +47,7 @@ namespace Oddmatics.RozWorld.Server.Entities
                 }
             }
         }
+        public override string FormattedName { get { return "<" + DisplayName + ">"; } } // TODO: Make this support config-loaded formatting
         public override IInventory Inventory { get; set; }
         public override bool IsControllable { get { return IsRealPlayer; } } // For the sake of building rn
         public override bool IsFreezable { get { return true; } }
@@ -112,7 +113,7 @@ namespace Oddmatics.RozWorld.Server.Entities
 
         public override bool HasPermission(string key)
         {
-            return false;
+            return true; // Just temporarily
         }
 
         public override bool Kick(string reason = "")

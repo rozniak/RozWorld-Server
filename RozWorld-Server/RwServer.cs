@@ -90,6 +90,7 @@ namespace Oddmatics.RozWorld.Server
         public IContentManager ContentManager { get; private set; }
         public string DisplayName { get { return "Server"; } }
         public IEconomySystem EconomySystem { get; private set; }
+        public string FormattedName { get { return "<" + DisplayName + ">"; } } // TODO: Make this support config-loaded formatting
         public Difficulty GameDifficulty { get; set; }
         public GameMode GameMode { get; private set; }
         public ushort HostingPort { get; private set; }
@@ -193,25 +194,41 @@ namespace Oddmatics.RozWorld.Server
 
         public Player GetPlayer(string name)
         {
-            if (AccountNameFromDisplay.ContainsKey(name.ToLower()))
+            Player player = null;
+            string realName = name.ToLower();
+
+            if (AccountNameFromDisplay.ContainsKey(realName))
             {
-                string accountName = AccountNameFromDisplay[name.ToLower()].ToLower();
-
-                if (OnlineRealPlayers.ContainsKey(accountName))
-                    return OnlineRealPlayers[accountName];
-
-                if (OnlineBotPlayers.ContainsKey(accountName))
-                    return OnlineBotPlayers[accountName];
+                player = GetPlayerByUsername(AccountNameFromDisplay[realName]);
 
                 // If the key isn't found, there's a syncing error
                 // (Account name recorded, yet the player isn't on the server)
-                AccountNameFromDisplay.Remove(name.ToLower());
+                if (player == null)
+                    AccountNameFromDisplay.Remove(realName);
             }
+
+            return player;
+        }
+
+        public Player GetPlayerAbsolute(string name)
+        {
+            return null; // TODO: code this
+        }
+
+        public Player GetPlayerByUsername(string username)
+        {
+            string realUsername = username.ToLower();
+
+            if (OnlineRealPlayers.ContainsKey(realUsername))
+                return OnlineRealPlayers[realUsername];
+
+            if (OnlineBotPlayers.ContainsKey(realUsername))
+                return OnlineBotPlayers[realUsername];
 
             return null;
         }
 
-        public Player GetPlayerAbsolute(string name)
+        public Player GetPlayerByUsernameAbs(string username)
         {
             return null; // TODO: code this
         }
@@ -521,6 +538,7 @@ namespace Oddmatics.RozWorld.Server
             try
             {
                 UdpServer = new RwUdpServer(HostingPort);
+                UdpServer.ChatMessageReceived += new PacketEventHandler(UdpServer_ChatMessageReceived);
                 UdpServer.InfoRequestReceived += new PacketEventHandler(UdpServer_InfoRequestReceived);
                 UdpServer.LogInRequestReceived += new PacketEventHandler(UdpServer_LogInRequestReceived);
                 UdpServer.SignUpRequestReceived += new PacketEventHandler(UdpServer_SignUpRequestReceived);
@@ -584,6 +602,30 @@ namespace Oddmatics.RozWorld.Server
         }
 
 
+        private void UdpServer_ChatMessageReceived(object sender, PacketEventArgs e)
+        {
+            var chatPacket = (ChatPacket)e.Packet;
+
+            Player player = GetPlayerByUsername(chatPacket.Username);
+
+            if (player.HasPermission("rwcore.say.self"))
+            {
+                var chatEventArgs = new PlayerChatEventArgs(player, chatPacket.Message, true);
+
+                if (PlayerChatting != null)
+                    PlayerChatting(this, chatEventArgs);
+
+                if (!chatEventArgs.Cancel)
+                {
+                    string message = chatEventArgs.UseServerFormatting ?
+                        player.FormattedName + " " + chatPacket.Message :
+                        chatPacket.Message;
+
+                    BroadcastMessage(message);
+                }
+            }
+        }
+
         private void UdpServer_InfoRequestReceived(object sender, PacketEventArgs e)
         {
             var infoPacket = (ServerInfoRequestPacket)e.Packet;
@@ -627,7 +669,7 @@ namespace Oddmatics.RozWorld.Server
 
                     if (result == ErrorMessage.NO_ERROR)
                     {
-                        UdpServer.AddClient(logInPacket.SenderEndPoint); // Attempt to add the client
+                        UdpServer.AddClient(realUsername, logInPacket.SenderEndPoint); // Attempt to add the client
                         ConnectedClient client = UdpServer.GetConnectedClient(logInPacket.SenderEndPoint);
 
                         if (client != null) // Everything was successful
