@@ -138,7 +138,7 @@ namespace Oddmatics.RozWorld.Server.Entities
 
         public override void SendPublicMessage(string message)
         {
-            throw new NotImplementedException();
+            RwCore.Server.BroadcastMessage(FormattedName + " " + message);
         }
 
         public static bool ValidName(string name)

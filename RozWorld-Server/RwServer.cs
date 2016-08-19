@@ -608,7 +608,9 @@ namespace Oddmatics.RozWorld.Server
 
             Player player = GetPlayerByUsername(chatPacket.Username);
 
-            if (player.HasPermission("rwcore.say.self"))
+            if (chatPacket.Message.StartsWith("/") && chatPacket.Message.Length > 1)
+                SendCommand(player, chatPacket.Message.Substring(1));
+            else if (player.HasPermission("rwcore.say.self"))
             {
                 var chatEventArgs = new PlayerChatEventArgs(player, chatPacket.Message, true);
 
