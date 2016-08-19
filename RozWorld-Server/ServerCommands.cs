@@ -401,7 +401,7 @@ namespace Oddmatics.RozWorld.Server
                 string message = String.Empty;
                 Player targetPlayer = RwCore.Server.GetPlayerAbsolute(args[0]);
 
-                for (int i = 1; i <= args.Count; i++)
+                for (int i = 1; i < args.Count; i++)
                 {
                     message += args[i];
 

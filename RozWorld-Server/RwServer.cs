@@ -581,8 +581,11 @@ namespace Oddmatics.RozWorld.Server
 
             // TODO: Send disconnect packets here
 
+            UdpServer.ChatMessageReceived -= UdpServer_ChatMessageReceived;
             UdpServer.InfoRequestReceived -= UdpServer_InfoRequestReceived;
+            UdpServer.LogInRequestReceived -= UdpServer_LogInRequestReceived;
             UdpServer.SignUpRequestReceived -= UdpServer_SignUpRequestReceived;
+
             // Stop RwUdpServer here
 
             if (Stopping != null)
