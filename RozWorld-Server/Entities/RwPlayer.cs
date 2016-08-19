@@ -128,7 +128,7 @@ namespace Oddmatics.RozWorld.Server.Entities
 
         public override void SendMessage(string message)
         {
-            throw new NotImplementedException();
+            Client.SendGameChat(Account.Username, message);
         }
 
         public override void SendPrivateMessageTo(string message, Player recipient)
