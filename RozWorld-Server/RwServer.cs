@@ -172,7 +172,7 @@ namespace Oddmatics.RozWorld.Server
         private void DropPlayer(Player player)
         {
             ((RwPlayer)player).Save();
-            OnlineRealPlayers.Remove(player.Account.Username);
+            OnlineRealPlayers.Remove(player.Account.Username.ToLower());
             AccountNameFromDisplay.Remove(player.DisplayName.ToLower());
         }
 
