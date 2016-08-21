@@ -127,6 +127,7 @@ namespace Oddmatics.RozWorld.Server
         public event EventHandler FatalError;
         public event EventHandler Pause;
         public event PlayerChatEventHandler PlayerChatting;
+        public event PlayerCommandEventHandler PlayerCommanding;
         public event PlayerLogInEventHandler PlayerLogIn;
         public event EventHandler Started;
         public event EventHandler Starting;
@@ -612,7 +613,18 @@ namespace Oddmatics.RozWorld.Server
             Player player = GetPlayerByUsername(chatPacket.Username);
 
             if (chatPacket.Message.StartsWith("/") && chatPacket.Message.Length > 1)
-                SendCommand(player, chatPacket.Message.Substring(1));
+            {
+                string cmd = chatPacket.Message.Substring(1);
+                var commandEventArgs = new PlayerCommandEventArgs(player, cmd);
+
+                if (PlayerCommanding != null)
+                    PlayerCommanding(this, commandEventArgs);
+
+                if (!commandEventArgs.Cancel)
+                {
+                    SendCommand(player, cmd);
+                }
+            }
             else if (player.HasPermission("rwcore.say.self"))
             {
                 var chatEventArgs = new PlayerChatEventArgs(player, chatPacket.Message, true);
