@@ -533,7 +533,7 @@ namespace Oddmatics.RozWorld.Server
                 string recipientMessage = "[" + sender.DisplayName + " -> me]";
                 string message = String.Empty;
 
-                for (int i = 1; i <= args.Count; i++)
+                for (int i = 1; i < args.Count; i++)
                 {
                     message += " " + args[i];
                 }

@@ -24,29 +24,27 @@ namespace Oddmatics.RozWorld.Server.Accounts
     {
         public string ChatPrefix { get; set; }
         public string ChatSuffix { get; set; }
-
         private string _ColourModifier;
         public string ColourModifier
         {
             get { return _ColourModifier; }
             set { if (ChatColour.IsChatColour(value)) _ColourModifier = value; }
         }
-
+        public bool Default { get; set; }
         private List<IAccount> _Members;
         public IList<IAccount> Members
         {
             get { return _Members.AsReadOnly(); }
         }
-
         private List<string> _Permissions;
         public IList<string> Permissions
         {
             get { return _Permissions.AsReadOnly(); }
         }
-
         private string _Name;
         public string Name
         {
+            // TODO: Make sure this updates in permission authority
             get { return _Name; }
             set
             {
@@ -58,7 +56,8 @@ namespace Oddmatics.RozWorld.Server.Accounts
                     _Name = realValue;
             }
         }
-        public bool Default { get; set; }
+        
+
         private PermissionGroupFile File;
 
 

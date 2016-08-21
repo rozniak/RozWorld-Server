@@ -52,13 +52,13 @@ namespace Oddmatics.RozWorld.Server.Entities
         public override bool IsControllable { get { return IsRealPlayer; } } // For the sake of building rn
         public override bool IsFreezable { get { return true; } }
         public override bool IsFlammable { get { return true; } }
-        public override int Mass { get { return 0; } } // TODO: decide this mass much later on
         public override bool IsRealPlayer { get; protected set; }
         public override IItem ItemInHand { get; set; }
         public override bool Joinable { get; set; }
+        public override int Mass { get { return 0; } } // TODO: decide this mass much later on
+        public override bool Online { get { return false; } } // For the sake of building rn
         public override string Status { get; set; }
         public override byte Visibility { get; set; }
-        public override bool Online { get { return false; } } // For the sake of building rn
         public override bool VisibleOnScoreboard { get; set; }
 
 
@@ -113,7 +113,7 @@ namespace Oddmatics.RozWorld.Server.Entities
 
         public override bool HasPermission(string key)
         {
-            return true; // Just temporarily
+            return Account.HasPermission(key);
         }
 
         public override bool Kick(string reason = "")
