@@ -21,6 +21,7 @@ using Oddmatics.RozWorld.API.Server.Level;
 using Oddmatics.RozWorld.Net.Packets;
 using Oddmatics.RozWorld.Net.Packets.Event;
 using Oddmatics.RozWorld.Net.Server;
+using Oddmatics.RozWorld.Net.Server.Event;
 using Oddmatics.RozWorld.Server.Accounts;
 using Oddmatics.RozWorld.Server.Entities;
 using Oddmatics.RozWorld.Server.Game;
@@ -166,6 +167,13 @@ namespace Oddmatics.RozWorld.Server
                     player.SendMessage(message);
                 }
             }
+        }
+
+        private void DropPlayer(Player player)
+        {
+            ((RwPlayer)player).Save();
+            OnlineRealPlayers.Remove(player.Account.Username);
+            AccountNameFromDisplay.Remove(player.DisplayName.ToLower());
         }
 
         public string GetCommandDescription(string command)
@@ -540,6 +548,7 @@ namespace Oddmatics.RozWorld.Server
             {
                 UdpServer = new RwUdpServer(HostingPort);
                 UdpServer.ChatMessageReceived += new PacketEventHandler(UdpServer_ChatMessageReceived);
+                UdpServer.ClientDropped += new ClientDropEventHandler(UdpServer_ClientDropped);
                 UdpServer.InfoRequestReceived += new PacketEventHandler(UdpServer_InfoRequestReceived);
                 UdpServer.LogInRequestReceived += new PacketEventHandler(UdpServer_LogInRequestReceived);
                 UdpServer.SignUpRequestReceived += new PacketEventHandler(UdpServer_SignUpRequestReceived);
@@ -640,6 +649,19 @@ namespace Oddmatics.RozWorld.Server
 
                     BroadcastMessage(message);
                 }
+            }
+        }
+
+        private void UdpServer_ClientDropped(object sender, ClientDropEventArgs e)
+        {
+            IList<string> usernames = e.Client.Usernames;
+
+            foreach (string user in usernames)
+            {
+                Player player = GetPlayerByUsername(user);
+                Logger.Out("[STAT/DISC] " + player.DisplayName + " (" + player.Account.Username +
+                    ") has been disconnected (client timeout).");
+                DropPlayer(player);
             }
         }
 

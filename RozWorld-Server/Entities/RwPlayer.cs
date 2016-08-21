@@ -121,6 +121,11 @@ namespace Oddmatics.RozWorld.Server.Entities
             return ((RwServer)RwCore.Server).Kick(this, reason);
         }
 
+        public void Save()
+        {
+            // TODO: Save player data here
+        }
+
         public override void SendInviteTo(Player recipient)
         {
             throw new NotImplementedException();
