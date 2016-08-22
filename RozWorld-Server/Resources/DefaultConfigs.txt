@@ -5,6 +5,8 @@
 
 
 # Server specific options
+autosave-enabled:true
+autosave-interval:1800000
 browser-name:RozWorld Server
 host-port:41715
 max-players:20
@@ -19,8 +21,8 @@ generator:Default
 generator-options:none
 
 # Game settings
-game-mode:books
 difficulty:3
+game-mode:books
 
 # Player settings
 enable-clans:true

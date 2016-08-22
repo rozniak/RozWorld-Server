@@ -35,6 +35,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using System.Timers;
 
 namespace Oddmatics.RozWorld.Server
 {
@@ -86,6 +87,8 @@ namespace Oddmatics.RozWorld.Server
         #endregion
 
         public IAccountsManager AccountsManager { get; private set; }
+        public bool AutosaveEnabled { get; private set; }
+        public long AutosaveInterval { get; private set; }
         public string BrowserName { get; private set; }
         public IList<string> Commands { get; private set; }
         public IContentManager ContentManager { get; private set; }
@@ -120,7 +123,7 @@ namespace Oddmatics.RozWorld.Server
         public string ServerVersion { get { return "0.01"; } }
         public string SpawnWorldName { get; private set; }
         public IStatCalculator StatCalculator { get; private set; }
-        public byte TickRate { get; private set; }
+        public byte TickRate { get { return (byte)GameTime.Interval; } }
         private List<string> _WhitelistedPlayers;
         public IList<string> WhitelistedPlayers { get { return _WhitelistedPlayers.AsReadOnly(); } }
 
@@ -145,9 +148,11 @@ namespace Oddmatics.RozWorld.Server
         private string[] CompatibleServerNames = new string[] { "vanilla", "*" };
         private ushort CompatibleVanillaVersion = 1;
         public string CurrentPluginLoading { get; private set; }
+        private Timer GameTime;
         public bool HasStarted { get; private set; }
         private Dictionary<string, RwPlayer> OnlineRealPlayers;
         private Dictionary<string, RwPlayer> OnlineBotPlayers;
+        private long SinceLastAutosave = 0;
         private string SpawnWorldGenerator = String.Empty;
         private string SpawnWorldGeneratorOptions = String.Empty;
         private RwUdpServer UdpServer;
@@ -278,10 +283,12 @@ namespace Oddmatics.RozWorld.Server
         {
             // TODO: Improve this loading later!
 
+            AutosaveEnabled = true;
+            AutosaveInterval = 1800000;
             BrowserName = "RozWorld Server";
             HostingPort = 41715;
             MaxPlayers = 20;
-            TickRate = 10;
+            GameTime.Interval = 10;
             IsWhitelisted = false;
             FormattingString = "<%disp%>";
             SpawnWorldGenerator = "Default";
@@ -303,6 +310,14 @@ namespace Oddmatics.RozWorld.Server
                 switch (item.Key.ToLower())
                 {
                         // Server specific options
+                    case "autosave-enabled":
+                        AutosaveEnabled = StringConversion.ToBool(item.Value, true, AutosaveEnabled);
+                        break;
+
+                    case "autosave-interval":
+                        AutosaveInterval = StringConversion.ToLong(item.Value, true, AutosaveInterval);
+                        break;
+
                     case "browser-name":
                         BrowserName = item.Value;
                         break;
@@ -316,7 +331,7 @@ namespace Oddmatics.RozWorld.Server
                         break;
 
                     case "tick-rate":
-                        TickRate = StringConversion.ToByte(item.Value, true, TickRate);
+                        GameTime.Interval = StringConversion.ToByte(item.Value, true, TickRate);
                         break;
 
                     case "whitelist":
@@ -503,6 +518,8 @@ namespace Oddmatics.RozWorld.Server
             PermissionAuthority = new RwPermissionAuthority();
             InstalledCommands = new Dictionary<string, Command>();
             StatCalculator = new RwStatCalculator();
+            GameTime = new Timer();
+            GameTime.Elapsed += new ElapsedEventHandler(GameTime_Elapsed);
 
             ((RwPermissionAuthority)PermissionAuthority).Load(); // Load perm groups
             ServerCommands.Register(); // Register commands and permissions for the server
@@ -566,6 +583,8 @@ namespace Oddmatics.RozWorld.Server
 
             Logger.Out("[STAT] Finished loading plugins!");
 
+            GameTime.Start(); // Start game timer
+
             // Load worlds here
 
             Logger.Out("[STAT] Starting listener on UDP port " + HostingPort.ToString() + "...");
@@ -628,6 +647,8 @@ namespace Oddmatics.RozWorld.Server
             if (Stopping != null)
                 Stopping(this, EventArgs.Empty);
 
+            GameTime.Stop(); // Stop game timer
+
             // TODO: Save world and stuff
 
             if (Stopped != null)
@@ -641,6 +662,24 @@ namespace Oddmatics.RozWorld.Server
             return false; // TODO: code this
         }
 
+
+        private void GameTime_Elapsed(object sender, ElapsedEventArgs e)
+        {
+            // TODO: process game updates here
+            if (AutosaveEnabled)
+            {
+                SinceLastAutosave += TickRate;
+
+                if (SinceLastAutosave > AutosaveInterval)
+                {
+                    // TODO: Perform server save here
+                    SinceLastAutosave = 0;
+                }
+            }
+
+            if (Tick != null)
+                Tick(this, new ServerTickEventArgs(TickRate));
+        }
 
         private void UdpServer_ChatMessageReceived(object sender, PacketEventArgs e)
         {
