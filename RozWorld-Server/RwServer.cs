@@ -598,6 +598,7 @@ namespace Oddmatics.RozWorld.Server
             // TODO: Send disconnect packets here
 
             UdpServer.ChatMessageReceived -= UdpServer_ChatMessageReceived;
+            UdpServer.ClientDropped -= UdpServer_ClientDropped;
             UdpServer.InfoRequestReceived -= UdpServer_InfoRequestReceived;
             UdpServer.LogInRequestReceived -= UdpServer_LogInRequestReceived;
             UdpServer.SignUpRequestReceived -= UdpServer_SignUpRequestReceived;
@@ -764,8 +765,14 @@ namespace Oddmatics.RozWorld.Server
                     signUpPacket.PasswordHash, signUpPacket.SenderEndPoint.Address);
 
             if (result == ErrorMessage.NO_ERROR)
+            {
+                if (AccountSignUp != null)
+                    AccountSignUp(this, new AccountSignUpEventArgs(signUpPacket.SenderEndPoint.Address,
+                        signUpPacket.Username));
+
                 Logger.Out("[STAT] Account sign up complete for username '" + signUpPacket.Username +
                     "' from " + signUpPacket.SenderEndPoint.ToString() + ".");
+            }
             else
                 Logger.Out("[STAT] Account sign up unsuccessful for username '" + signUpPacket.Username +
                     "' from " + signUpPacket.SenderEndPoint.ToString() + " - Error " + result.ToString() +
