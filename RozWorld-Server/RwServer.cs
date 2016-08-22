@@ -274,8 +274,28 @@ namespace Oddmatics.RozWorld.Server
             return Kick(GetPlayer(name), reason);
         }
 
+        private void LoadConfigDefaults()
+        {
+            // TODO: Improve this loading later!
+
+            BrowserName = "RozWorld Server";
+            HostingPort = 41715;
+            MaxPlayers = 20;
+            TickRate = 10;
+            IsWhitelisted = false;
+            FormattingString = "<%disp%>";
+            SpawnWorldGenerator = "Default";
+            SpawnWorldGeneratorOptions = "none";
+            GameMode = GameMode.Books;
+            GameDifficulty = Difficulty.Medium;
+            
+            // TODO: Clan stuff here
+        }
+
         private void LoadConfigs(string configFile)
         {
+            LoadConfigDefaults();
+
             var configs = FileSystem.ReadINIToDictionary(configFile);
 
             foreach (var item in configs)
