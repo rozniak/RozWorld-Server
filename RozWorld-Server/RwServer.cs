@@ -91,7 +91,8 @@ namespace Oddmatics.RozWorld.Server
         public IContentManager ContentManager { get; private set; }
         public string DisplayName { get { return "Server"; } }
         public IEconomySystem EconomySystem { get; private set; }
-        public string FormattedName { get { return "<" + DisplayName + ">"; } } // TODO: Make this support config-loaded formatting
+        public string FormattedName { get { return FormattingString.Replace("%disp%", DisplayName); } }
+        public string FormattingString { get; private set; }
         public Difficulty GameDifficulty { get; set; }
         public GameMode GameMode { get; private set; }
         public ushort HostingPort { get; private set; }
@@ -300,6 +301,11 @@ namespace Oddmatics.RozWorld.Server
 
                     case "whitelist":
                         IsWhitelisted = StringConversion.ToBool(item.Value, true, IsWhitelisted);
+                        break;
+
+                        // Chat related options
+                    case "name-formatting":
+                        FormattingString = item.Value;
                         break;
 
                         // World generation options

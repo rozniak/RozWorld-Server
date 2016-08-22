@@ -11,6 +11,9 @@ max-players:20
 tick-rate:10
 whitelist:false
 
+# Chat related options
+name-formatting:<%disp%>
+
 # World generation options
 generator:Default
 generator-options:none
