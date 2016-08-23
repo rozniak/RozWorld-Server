@@ -10,6 +10,7 @@
  */
 
 using Oddmatics.RozWorld.API.Generic;
+using Oddmatics.RozWorld.API.Generic.Chat;
 using Oddmatics.RozWorld.API.Server.Accounts;
 using Oddmatics.RozWorld.API.Server.Entities;
 using Oddmatics.RozWorld.API.Server.Game;
@@ -35,7 +36,12 @@ namespace Oddmatics.RozWorld.Server.Accounts
         {
             get { throw new NotImplementedException(); }
         }
-        public string ColourModifier { get; set; }
+        private string _ColourModifier;
+        public string ColourModifier
+        {
+            get { return _ColourModifier; }
+            set { if (ChatColour.IsChatColour(value) || value == String.Empty) _ColourModifier = value; }
+        }
         public DateTime CreationDate
         {
             get { return AccountFile.CreationDate; }

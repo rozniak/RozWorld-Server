@@ -73,6 +73,11 @@ namespace Oddmatics.RozWorld.Server
         /// The text file containing banned account names.
         /// </summary>
         public static string FILE_ACCOUNT_BANS = Directory.GetCurrentDirectory() + "\\namebans.txt";
+
+        /// <summary>
+        /// The text file containing whitelisted account names.
+        /// </summary>
+        public static string FILE_ACCOUNT_WHITELIST = Directory.GetCurrentDirectory() + "\\whitelist.txt";
         
         /// <summary>
         /// The config file for server variables.
@@ -473,6 +478,9 @@ namespace Oddmatics.RozWorld.Server
             FileSystem.MakeDirectory(DIRECTORY_PLAYERS);
             FileSystem.MakeDirectory(DIRECTORY_PLUGINS);
 
+
+            // TODO: Improve this section - reduce alike code blocks
+
             // Load bans
             BannedAccountNames = new List<string>();
             BannedIPs = new List<IPAddress>();
@@ -485,10 +493,12 @@ namespace Oddmatics.RozWorld.Server
 
                 foreach (string accountName in accountNames)
                 {
-                    if (accountName != null &&
-                        RwPlayer.ValidName(accountName) &&
-                        !BannedAccountNames.Contains(accountName))
-                        BannedAccountNames.Add(accountName);
+                    string realName = accountName.ToLower();
+
+                    if (realName != null &&
+                        RwPlayer.ValidName(realName) &&
+                        !BannedAccountNames.Contains(realName))
+                        BannedAccountNames.Add(realName);
                 }
             }
 
@@ -505,6 +515,26 @@ namespace Oddmatics.RozWorld.Server
                     if (IPAddress.TryParse(ipString, out ip) &&
                         !BannedIPs.Contains(ip))
                         BannedIPs.Add(ip);
+                }
+            }
+
+            // Load whitelists
+            _WhitelistedPlayers = new List<string>();
+
+            if (!File.Exists(FILE_ACCOUNT_WHITELIST))
+                File.Create(FILE_ACCOUNT_WHITELIST);
+            else
+            {
+                var accountNames = FileSystem.GetTextFile(FILE_ACCOUNT_WHITELIST);
+
+                foreach (string accountName in accountNames)
+                {
+                    string realName = accountName.ToLower();
+
+                    if (realName != null &&
+                        RwPlayer.ValidName(realName) &&
+                        !_WhitelistedPlayers.Contains(realName))
+                        _WhitelistedPlayers.Add(realName);
                 }
             }
 

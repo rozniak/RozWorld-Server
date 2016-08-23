@@ -49,7 +49,7 @@ namespace Oddmatics.RozWorld.Server.Entities
         }
         public override string FormattedName
         {
-            get { return RwCore.Server.FormattingString.Replace("%disp%", DisplayName); }
+            get { return RwCore.Server.FormattingString.Replace("%disp%", Account.ColourModifier + DisplayName); }
         }
         public override IInventory Inventory { get; set; }
         public override bool IsControllable { get { return IsRealPlayer; } } // For the sake of building rn
@@ -151,7 +151,8 @@ namespace Oddmatics.RozWorld.Server.Entities
 
         public static bool ValidName(string name)
         {
-            return new Regex("^[A-Za-z0-9_]+$").IsMatch(name);
+            return new Regex("^[A-Za-z0-9_]+$").IsMatch(name) &&
+                name.Length > 0 && name.Length <= 18;
         }
     }
 }
