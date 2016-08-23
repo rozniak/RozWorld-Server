@@ -149,14 +149,17 @@ namespace Oddmatics.RozWorld.Server
         private Dictionary<string, string> AccountNameFromDisplay;
         private List<string> BannedAccountNames;
         private List<IPAddress> BannedIPs;
-        private Dictionary<string, Command> InstalledCommands;
+        private ChatHookCallback ChatHook;
+        private bool ChatHookActive;
+        private bool ChatHooked { get { return ChatHook != null; } }
         private string[] CompatibleServerNames = new string[] { "vanilla", "*" };
         private ushort CompatibleVanillaVersion = 1;
         public string CurrentPluginLoading { get; private set; }
         private Timer GameTime;
         public bool HasStarted { get; private set; }
-        private Dictionary<string, RwPlayer> OnlineRealPlayers;
+        private Dictionary<string, Command> InstalledCommands;
         private Dictionary<string, RwPlayer> OnlineBotPlayers;
+        private Dictionary<string, RwPlayer> OnlineRealPlayers;
         private long SinceLastAutosave = 0;
         private string SpawnWorldGenerator = String.Empty;
         private string SpawnWorldGeneratorOptions = String.Empty;
@@ -178,6 +181,25 @@ namespace Oddmatics.RozWorld.Server
                     player.SendMessage(message);
                 }
             }
+        }
+
+        public bool Do(string message)
+        {
+            if (ChatHooked)
+            {
+                ChatHookActive = true;
+                bool result = ChatHook(this, message);
+                ChatHookActive = false;
+
+                return result;
+            }
+
+            if (message.StartsWith("/") && message.Length > 1)
+                return SendCommand(this, message.Substring(1));
+            else
+                Logger.Out("[ERR] Unknown command.");
+
+            return false;
         }
 
         private void DropPlayer(Player player)
@@ -261,6 +283,17 @@ namespace Oddmatics.RozWorld.Server
         public bool HasPermission(string key)
         {
             return true; // Server has full permissions
+        }
+
+        public bool HookChatToCallback(ChatHookCallback callback)
+        {
+            if (!ChatHooked)
+            {
+                ChatHook = callback;
+                return true;
+            }
+
+            return false;
         }
 
         public bool IsValidEntity(ushort id)
@@ -410,6 +443,12 @@ namespace Oddmatics.RozWorld.Server
             return false;
         }
 
+        public void ReleaseChatHook()
+        {
+            if (ChatHooked && ChatHookActive)
+                ChatHook = null;
+        }
+
         public void Restart()
         {
             // Restart here
@@ -493,12 +532,14 @@ namespace Oddmatics.RozWorld.Server
 
                 foreach (string accountName in accountNames)
                 {
-                    string realName = accountName.ToLower();
+                    if (accountName != null)
+                    {
+                        string realName = accountName.ToLower();
 
-                    if (realName != null &&
-                        RwPlayer.ValidName(realName) &&
-                        !BannedAccountNames.Contains(realName))
-                        BannedAccountNames.Add(realName);
+                        if (RwPlayer.ValidName(realName) &&
+                            !BannedAccountNames.Contains(realName))
+                            BannedAccountNames.Add(realName);
+                    }
                 }
             }
 
@@ -529,12 +570,14 @@ namespace Oddmatics.RozWorld.Server
 
                 foreach (string accountName in accountNames)
                 {
-                    string realName = accountName.ToLower();
+                    if (accountName != null)
+                    {
+                        string realName = accountName.ToLower();
 
-                    if (realName != null &&
-                        RwPlayer.ValidName(realName) &&
-                        !_WhitelistedPlayers.Contains(realName))
-                        _WhitelistedPlayers.Add(realName);
+                        if (RwPlayer.ValidName(realName) &&
+                            !_WhitelistedPlayers.Contains(realName))
+                            _WhitelistedPlayers.Add(realName);
+                    }
                 }
             }
 
@@ -715,7 +758,13 @@ namespace Oddmatics.RozWorld.Server
         {
             var chatPacket = (ChatPacket)e.Packet;
 
-            Player player = GetPlayerByUsername(chatPacket.Username);
+            RwPlayer player = (RwPlayer)GetPlayerByUsername(chatPacket.Username);
+
+            if (player.ChatHooked)
+            {
+                player.CallChatHook(chatPacket.Message);
+                return;
+            }
 
             if (chatPacket.Message.StartsWith("/") && chatPacket.Message.Length > 1)
             {

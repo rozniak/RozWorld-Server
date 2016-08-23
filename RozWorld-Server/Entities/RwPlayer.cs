@@ -13,6 +13,7 @@ using Oddmatics.RozWorld.API.Generic;
 using Oddmatics.RozWorld.API.Server.Accounts;
 using Oddmatics.RozWorld.API.Server.Item;
 using Oddmatics.RozWorld.API.Server.Entities;
+using Oddmatics.RozWorld.API.Server.Event;
 using Oddmatics.RozWorld.Net.Packets;
 using Oddmatics.RozWorld.Net.Server;
 using Oddmatics.RozWorld.Server.Accounts;
@@ -65,6 +66,9 @@ namespace Oddmatics.RozWorld.Server.Entities
         public override bool VisibleOnScoreboard { get; set; }
 
 
+        private ChatHookCallback ChatHook;
+        private bool ChatHookActive;
+        public bool ChatHooked { get { return ChatHook != null; } }
         private ConnectedClient Client;
 
 
@@ -105,6 +109,13 @@ namespace Oddmatics.RozWorld.Server.Entities
             throw new NotImplementedException();
         }
 
+        public void CallChatHook(string message)
+        {
+            ChatHookActive = true;
+            ChatHook(this, message);
+            ChatHookActive = false;
+        }
+
         public bool Disconnect(byte reason)
         {
             // If this is a real player, send the disconnect packet, otherwise continue as normal
@@ -119,9 +130,26 @@ namespace Oddmatics.RozWorld.Server.Entities
             return Account.HasPermission(key);
         }
 
+        public override bool HookChatToCallback(ChatHookCallback callback)
+        {
+            if (!ChatHooked)
+            {
+                ChatHook = callback;
+                return true;
+            }
+
+            return false;
+        }
+
         public override bool Kick(string reason = "")
         {
             return ((RwServer)RwCore.Server).Kick(this, reason);
+        }
+
+        public override void ReleaseChatHook()
+        {
+            if (ChatHooked && ChatHookActive)
+                ChatHook = null;
         }
 
         public void Save()
