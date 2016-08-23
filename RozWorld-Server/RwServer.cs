@@ -834,10 +834,12 @@ namespace Oddmatics.RozWorld.Server
 
             Logger.Out("[UDP] Log in request received by " + logInPacket.SenderEndPoint.ToString());
 
-            // Check bans
+            // Check bans and whitelist status
             if (BannedIPs.Contains(logInPacket.SenderEndPoint.Address) ||
-                BannedAccountNames.Contains(logInPacket.Username))
+                BannedAccountNames.Contains(realUsername))
                 result = ErrorMessage.BANNED;
+            else if (IsWhitelisted && !WhitelistedPlayers.Contains(realUsername))
+                result = ErrorMessage.NOT_ON_WHITELIST;
             else if (logInPacket.ValidHashTime)
             {
                 // TODO: Revise a LOT of this code to work with both bots and real users :)
@@ -890,14 +892,17 @@ namespace Oddmatics.RozWorld.Server
         private void UdpServer_SignUpRequestReceived(object sender, PacketEventArgs e)
         {
             var signUpPacket = (SignUpRequestPacket)e.Packet;
+            string realUsername = signUpPacket.Username.ToLower();
             byte result;
 
             Logger.Out("[UDP] Sign up request received by " + signUpPacket.SenderEndPoint.ToString());
 
             // Check bans
             if (BannedIPs.Contains(signUpPacket.SenderEndPoint.Address) ||
-                BannedAccountNames.Contains(signUpPacket.Username))
+                BannedAccountNames.Contains(realUsername))
                 result = ErrorMessage.BANNED;
+            else if (IsWhitelisted && !WhitelistedPlayers.Contains(realUsername))
+                result = ErrorMessage.NOT_ON_WHITELIST;
             else
                 result = ((RwAccountsManager)AccountsManager).CreateAccount(signUpPacket.Username,
                     signUpPacket.PasswordHash, signUpPacket.SenderEndPoint.Address);
