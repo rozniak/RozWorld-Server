@@ -164,6 +164,7 @@ namespace Oddmatics.RozWorld.Server
         private string SpawnWorldGenerator = String.Empty;
         private string SpawnWorldGeneratorOptions = String.Empty;
         private RwUdpServer UdpServer;
+        public SessionInfo UdpSessionInfo { get { return UdpServer.SessionInfo; } }
 
 
         /// <summary>

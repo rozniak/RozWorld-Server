@@ -15,6 +15,7 @@ using Oddmatics.RozWorld.API.Server;
 using Oddmatics.RozWorld.API.Server.Accounts;
 using Oddmatics.RozWorld.API.Server.Entities;
 using Oddmatics.RozWorld.API.Server.Event;
+using Oddmatics.RozWorld.Net.Server;
 using Oddmatics.RozWorld.Server.Entities;
 using System;
 using System.Collections.Generic;
@@ -64,6 +65,11 @@ namespace Oddmatics.RozWorld.Server
                     RwCore.Server.PermissionAuthority.RegisterPermission("rwcore.msg", "Send a private message to a player.");
                     RwCore.Server.RegisterCommand("msg", ServerPrivateMessage, "Sends a private message to a player",
                         "/msg <name> [message]");
+
+                    // Command /netdiag
+                    RwCore.Server.PermissionAuthority.RegisterPermission("rwcore.netdiag", "View network diagnostic information.");
+                    RwCore.Server.RegisterCommand("netdiag", ServerNetDiag, "Views network diagnostic information.",
+                        "/netdiag");
 
                     // Command /perms
                     RwCore.Server.PermissionAuthority.RegisterPermission("rwcore.perms.groups.list", "List all permission groups.");
@@ -453,6 +459,40 @@ namespace Oddmatics.RozWorld.Server
             }
 
             sender.SendMessage(ChatColour.RED + ERROR_INVALID_PERMISSIONS + cmdName + ".");
+            return false;
+        }
+
+        /// <summary>
+        /// [Command Callback] Handles the /netdiag command.
+        /// </summary>
+        private static bool ServerNetDiag(ICommandCaller sender, IList<string> args)
+        {
+            const string cmdName = "/netdiag";
+
+            if (sender.HasPermission("rwcore.netdiag"))
+            {
+                if (args.Count > 0)
+                {
+                    sender.SendMessage(ChatColour.RED + ERROR_INVALID_ARGS_LENGTH + cmdName + ".");
+                    return false;
+                }
+
+                SessionInfo sessionInfo = ((RwServer)RwCore.Server).UdpSessionInfo;
+
+                sender.SendMessage("Networking statistics for this server session:");
+                sender.SendMessage("-----");
+                sender.SendMessage("Session started: " + sessionInfo.StartedAt.ToString());
+                sender.SendMessage("Uptime: " + sessionInfo.Uptime.Days.ToString() + " days, " +
+                    sessionInfo.Uptime.Hours.ToString() + " hours, " +
+                    sessionInfo.Uptime.Minutes.ToString() + " minutes, " +
+                    sessionInfo.Uptime.Seconds.ToString() + " seconds.");
+                sender.SendMessage("--");
+                sender.SendMessage("Bytes received: " + sessionInfo.BytesReceived.ToString());
+                sender.SendMessage("Bytes transmitted: " + sessionInfo.BytesTransmitted.ToString());
+
+                return true;
+            }
+
             return false;
         }
 
