@@ -96,9 +96,7 @@ namespace Oddmatics.RozWorld.Server.Accounts
         {
             get { return AccountFile.LastLogInIP; }
         }
-        public bool IsPlayer { get { return PlayerInstance != null; } }
-        public IPermissionGroup PermissionGroup { get; private set; }
-        public IList<string> Permissions
+        public IList<string> LocalPermissions
         {
             get
             {
@@ -108,6 +106,27 @@ namespace Oddmatics.RozWorld.Server.Accounts
                     if (item.Value == PermissionState.Granted)
                         grantedPermissions.Add(item.Key);
                 }
+                return grantedPermissions.AsReadOnly();
+            }
+        }
+        public bool IsPlayer { get { return PlayerInstance != null; } }
+        public IPermissionGroup PermissionGroup { get; private set; }
+        public IList<string> Permissions
+        {
+            get
+            {
+                var grantedPermissions = new List<string>();
+                grantedPermissions.AddRange(PermissionGroup.Permissions);
+
+                foreach (var item in PermissionStates)
+                {
+                    if (item.Value == PermissionState.Granted)
+                        grantedPermissions.Add(item.Key);
+                    else if (item.Value == PermissionState.Denied &&
+                        grantedPermissions.Contains(item.Key))
+                        grantedPermissions.Remove(item.Key);
+                }
+
                 return grantedPermissions.AsReadOnly();
             }
         }
