@@ -27,6 +27,7 @@ namespace Oddmatics.RozWorld.Server
     {
         private const string ERROR_INVALID_ARGS_LENGTH = "Invalid amount of arguments passed for ";
         private const string ERROR_INVALID_PERMISSIONS = "You do not have permission to execute command ";
+        private const string ERROR_NOT_IMPLEMENTED = "This command is not yet implemented.";
 
 
         private static bool Registered = false;
@@ -295,6 +296,40 @@ namespace Oddmatics.RozWorld.Server
         }
 
         /// <summary>
+        /// [Command Callback] Handles the /netdiag command.
+        /// </summary>
+        private static bool ServerNetDiag(ICommandCaller sender, IList<string> args)
+        {
+            const string cmdName = "/netdiag";
+
+            if (sender.HasPermission("rwcore.netdiag"))
+            {
+                if (args.Count > 0)
+                {
+                    sender.SendMessage(ChatColour.RED + ERROR_INVALID_ARGS_LENGTH + cmdName + ".");
+                    return false;
+                }
+
+                SessionInfo sessionInfo = ((RwServer)RwCore.Server).UdpSessionInfo;
+
+                sender.SendMessage("Networking statistics for this server session:");
+                sender.SendMessage("-----");
+                sender.SendMessage("Session started: " + sessionInfo.StartedAt.ToString());
+                sender.SendMessage("Uptime: " + sessionInfo.Uptime.Days.ToString() + " days, " +
+                    sessionInfo.Uptime.Hours.ToString() + " hours, " +
+                    sessionInfo.Uptime.Minutes.ToString() + " minutes, " +
+                    sessionInfo.Uptime.Seconds.ToString() + " seconds.");
+                sender.SendMessage("--");
+                sender.SendMessage("Bytes received: " + sessionInfo.BytesReceived.ToString());
+                sender.SendMessage("Bytes transmitted: " + sessionInfo.BytesTransmitted.ToString());
+
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
         /// [Command Callback] Handles the /perms command.
         /// </summary>
         private static bool ServerPermissions(ICommandCaller sender, IList<string> args)
@@ -318,20 +353,99 @@ namespace Oddmatics.RozWorld.Server
                 case "player":
                     // TODO: this requires GetPlayerAbsolute to work
                     // so it will be done more a lot later
+                    RwPlayer player = args.Count >= 2 ?
+                        (RwPlayer)RwCore.Server.GetPlayer(args[1]) :
+                        null;
 
-                    if (args.Count < 4)
+                    switch(args.Count)
                     {
-                        sender.SendMessage("Invalid length args specified, for help, use '" +
-                            ChatColour.YELLOW + cmdName + "?" + ChatColour.DEFAULT + "'.");
+                        case 2:
+                            if (args[1] == "?")
+                            {
+                                // Supply help here
+                                sender.SendMessage("Available commands for " + ChatColour.YELLOW + cmdName + " player...");
+                                sender.SendMessage("-----");
+                                sender.SendMessage("...<displayname> list - List permissions granted to the player.");
+                                sender.SendMessage("...<displayname> assign <groupname> - Assign the player to a permission group.");
+                                sender.SendMessage("...<displayname> set <permission> [granted|denied] - Grant or deny a specific permission.");
+                                sender.SendMessage("...<displayname> unset <permission> - Unsets a specific permission.");
+                                sender.SendMessage("...<displayname> prefix - View the player's prefix.");
+                                sender.SendMessage("...<displayname> prefix <newprefix> - Assign newprefix to the player.");
+                                sender.SendMessage("...<displayname> suffix - View the player's suffix.");
+                                sender.SendMessage("...<displayname> suffix <newsuffix> - Assign newsuffix to the player.");
 
-                        return true;
+                                return true;
+                            }
+
+                            sender.SendMessage("Do not recognise command '" + args[0] + "', use '"
+                                + ChatColour.YELLOW + cmdName + " ?" + ChatColour.DEFAULT + "' for help.");
+
+                            return false;
+
+                        case 3:
+                            if (player != null)
+                            {
+                                switch (args[2].ToLower())
+                                {
+                                    case "list":
+                                        // TODO: Improve this
+                                        sender.SendMessage("Listing permissions for '" + player.DisplayName + "':");
+
+                                        IList<string> perms = player.Permissions;
+
+                                        foreach (string perm in perms)
+                                        {
+                                            sender.SendMessage("+" + perm);
+                                        }
+
+                                        break;
+
+                                    case "prefix":
+                                    case "suffix":
+                                        // TODO: Code these
+                                        sender.SendMessage(ChatColour.RED + ERROR_NOT_IMPLEMENTED);
+                                        break;
+
+                                    default:
+                                        sender.SendMessage("Do not recognise command '" + args[0] + "', use '"
+                                            + ChatColour.YELLOW + cmdName + " ?" + ChatColour.DEFAULT + "' for help.");
+                                        return false;
+                                }
+
+                                return true;
+                            }
+
+                            return false;
+
+                        case 4:
+                            if (player != null)
+                            {
+                                switch (args[2].ToLower())
+                                {
+                                    case "assign":
+                                    case "unset":
+                                    case "prefix":
+                                    case "suffix":
+                                        // TODO: Code these
+                                        sender.SendMessage(ChatColour.RED + ERROR_NOT_IMPLEMENTED);
+                                        break;
+
+                                    default:
+                                        sender.SendMessage("Do not recognise command '" + args[0] + "', use '"
+                                            + ChatColour.YELLOW + cmdName + " ?" + ChatColour.DEFAULT + "' for help.");
+                                        return false;
+                                }
+
+                                return true;
+                            }
+
+                            return false;
+
+                        default:
+                            sender.SendMessage("Invalid length args specified, for help, use '" +
+                                ChatColour.YELLOW + cmdName + "?" + ChatColour.DEFAULT + "'.");
+                            return false;
                     }
-
-                    RwPlayer player = (RwPlayer)RwCore.Server.GetPlayerAbsolute(args[2].ToLower());
-
-                    IList<string> perms = player.Account.Permissions;
-
-                    // TODO: finish this
 
                     return true;
 
@@ -459,40 +573,6 @@ namespace Oddmatics.RozWorld.Server
             }
 
             sender.SendMessage(ChatColour.RED + ERROR_INVALID_PERMISSIONS + cmdName + ".");
-            return false;
-        }
-
-        /// <summary>
-        /// [Command Callback] Handles the /netdiag command.
-        /// </summary>
-        private static bool ServerNetDiag(ICommandCaller sender, IList<string> args)
-        {
-            const string cmdName = "/netdiag";
-
-            if (sender.HasPermission("rwcore.netdiag"))
-            {
-                if (args.Count > 0)
-                {
-                    sender.SendMessage(ChatColour.RED + ERROR_INVALID_ARGS_LENGTH + cmdName + ".");
-                    return false;
-                }
-
-                SessionInfo sessionInfo = ((RwServer)RwCore.Server).UdpSessionInfo;
-
-                sender.SendMessage("Networking statistics for this server session:");
-                sender.SendMessage("-----");
-                sender.SendMessage("Session started: " + sessionInfo.StartedAt.ToString());
-                sender.SendMessage("Uptime: " + sessionInfo.Uptime.Days.ToString() + " days, " +
-                    sessionInfo.Uptime.Hours.ToString() + " hours, " +
-                    sessionInfo.Uptime.Minutes.ToString() + " minutes, " +
-                    sessionInfo.Uptime.Seconds.ToString() + " seconds.");
-                sender.SendMessage("--");
-                sender.SendMessage("Bytes received: " + sessionInfo.BytesReceived.ToString());
-                sender.SendMessage("Bytes transmitted: " + sessionInfo.BytesTransmitted.ToString());
-
-                return true;
-            }
-
             return false;
         }
 

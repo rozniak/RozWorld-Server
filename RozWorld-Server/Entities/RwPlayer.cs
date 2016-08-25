@@ -18,6 +18,7 @@ using Oddmatics.RozWorld.Net.Packets;
 using Oddmatics.RozWorld.Net.Server;
 using Oddmatics.RozWorld.Server.Accounts;
 using System;
+using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
 namespace Oddmatics.RozWorld.Server.Entities
@@ -61,6 +62,7 @@ namespace Oddmatics.RozWorld.Server.Entities
         public override bool Joinable { get; set; }
         public override int Mass { get { return 0; } } // TODO: decide this mass much later on
         public override bool Online { get { return false; } } // For the sake of building rn
+        public override IList<string> Permissions { get { return Account.Permissions; } }
         public override string Status { get; set; }
         public override byte Visibility { get; set; }
         public override bool VisibleOnScoreboard { get; set; }
