@@ -169,5 +169,20 @@ namespace Oddmatics.RozWorld.Server.Accounts
                 group.Save();
             }
         }
+
+        public void UpdateGroupKey(string oldKey)
+        {
+            if (GroupRegistry.ContainsKey(oldKey))
+            {
+                var group = (RwPermissionGroup)GroupRegistry[oldKey];
+
+                if (group.Name != oldKey)
+                {
+                    // Name updated - renew the key with new name
+                    GroupRegistry.Remove(oldKey);
+                    GroupRegistry.Add(group.Name, group);
+                }
+            }
+        }
     }
 }

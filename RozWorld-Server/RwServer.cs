@@ -721,8 +721,11 @@ namespace Oddmatics.RozWorld.Server
             // TODO: Finish this!
 
             Logger.Out("[STAT] Server stopping...");
+            Logger.Out("[STAT] Disconnecting clients...");
 
             // TODO: Send disconnect packets here
+
+            Logger.Out("[STAT] Detaching listener...");
 
             UdpServer.ChatMessageReceived -= UdpServer_ChatMessageReceived;
             UdpServer.ClientDropped -= UdpServer_ClientDropped;
@@ -732,10 +735,16 @@ namespace Oddmatics.RozWorld.Server
 
             // Stop RwUdpServer here
 
+            Logger.Out("[STAT] Stopping plugins...");
+
             if (Stopping != null)
                 Stopping(this, EventArgs.Empty);
 
             GameTime.Stop(); // Stop game timer
+
+            Logger.Out("[STAT] Saving server data...");
+
+            Save();
 
             // TODO: Save world and stuff
 

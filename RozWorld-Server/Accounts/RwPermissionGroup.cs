@@ -44,16 +44,20 @@ namespace Oddmatics.RozWorld.Server.Accounts
         private string _Name;
         public string Name
         {
-            // TODO: Make sure this updates in permission authority
             get { return _Name; }
             set
             {
+                var permAuthority = (RwPermissionAuthority)RwCore.Server.PermissionAuthority;
+                string originalValue = _Name;
                 string realValue = value.ToLower();
 
                 if (_Name == String.Empty)
                     _Name = realValue;
-                else if (RwCore.Server.PermissionAuthority.GetGroup(realValue) == this)
+                else if (RwCore.Server.PermissionAuthority.GetGroup(realValue) == null) // Make sure group name is free
+                {
                     _Name = realValue;
+                    permAuthority.UpdateGroupKey(originalValue); // Sync key in authority
+                }
             }
         }
         
