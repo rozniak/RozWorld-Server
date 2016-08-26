@@ -22,7 +22,17 @@ namespace Oddmatics.RozWorld.Server.Accounts
 {
     public class RwPermissionAuthority : IPermissionAuthority
     {
-        public string DefaultGroupName { get; set; }
+        private IPermissionGroup _DefaultGroup;
+        public IPermissionGroup DefaultGroup
+        {
+            get { return _DefaultGroup; }
+            set
+            {
+                // Verify that the group being set is actually registered
+                if (GroupRegistry.ContainsValue(value))
+                    _DefaultGroup = value;
+            }
+        }
         public IList<string> GroupNames { get { return new List<string>(GroupRegistry.Keys).AsReadOnly(); } }
         public IList<string> RegisteredPermissions { get { return new List<string>(PermissionRegistry.Keys).AsReadOnly(); } }
 
@@ -51,7 +61,7 @@ namespace Oddmatics.RozWorld.Server.Accounts
                 permFile.Colour = ChatColour.DEFAULT;
                 permFile.Denied = new string[] { };
                 permFile.Granted = new string[] { };
-                permFile.Group = DefaultGroupName;
+                permFile.Group = DefaultGroup.Name;
                 permFile.Name = name;
                 permFile.Prefix = String.Empty;
                 permFile.Suffix = String.Empty;
@@ -123,9 +133,6 @@ namespace Oddmatics.RozWorld.Server.Accounts
 
                     var group = new RwPermissionGroup(file);
                     GroupRegistry.Add(group.Name, group);
-
-                    if (group.Default)
-                        DefaultGroupName = group.Name;
                 }
                 catch (Exception ex)
                 {

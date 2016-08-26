@@ -150,8 +150,8 @@ namespace Oddmatics.RozWorld.Server
         private List<string> BannedAccountNames;
         private List<IPAddress> BannedIPs;
         private ChatHookCallback ChatHook;
-        private bool ChatHookActive;
         private bool ChatHooked { get { return ChatHook != null; } }
+        private int ChatHookToken;
         private string[] CompatibleServerNames = new string[] { "vanilla", "*" };
         private ushort CompatibleVanillaVersion = 1;
         public string CurrentPluginLoading { get; private set; }
@@ -160,6 +160,7 @@ namespace Oddmatics.RozWorld.Server
         private Dictionary<string, Command> InstalledCommands;
         private Dictionary<string, RwPlayer> OnlineBotPlayers;
         private Dictionary<string, RwPlayer> OnlineRealPlayers;
+        public Random Random { get; private set; }
         private long SinceLastAutosave = 0;
         private string SpawnWorldGenerator = String.Empty;
         private string SpawnWorldGeneratorOptions = String.Empty;
@@ -187,13 +188,7 @@ namespace Oddmatics.RozWorld.Server
         public bool Do(string message)
         {
             if (ChatHooked)
-            {
-                ChatHookActive = true;
-                bool result = ChatHook(this, message);
-                ChatHookActive = false;
-
-                return result;
-            }
+                return ChatHook(this, message);
 
             if (message.StartsWith("/") && message.Length > 1)
                 return SendCommand(this, message.Substring(1));
@@ -286,15 +281,16 @@ namespace Oddmatics.RozWorld.Server
             return true; // Server has full permissions
         }
 
-        public bool HookChatToCallback(ChatHookCallback callback)
+        public int HookChatToCallback(ChatHookCallback callback)
         {
             if (!ChatHooked)
             {
                 ChatHook = callback;
-                return true;
+                ChatHookToken = Random.Next(1, int.MaxValue);
+                return ChatHookToken;
             }
 
-            return false;
+            return -1;
         }
 
         public bool IsValidEntity(ushort id)
@@ -444,10 +440,16 @@ namespace Oddmatics.RozWorld.Server
             return false;
         }
 
-        public void ReleaseChatHook()
+        public bool ReleaseChatHook(int token)
         {
-            if (ChatHooked && ChatHookActive)
+            if (ChatHooked && token == ChatHookToken)
+            {
                 ChatHook = null;
+                ChatHookToken = 0;
+                return true;
+            }
+
+            return false;
         }
 
         public void Restart()
@@ -598,6 +600,7 @@ namespace Oddmatics.RozWorld.Server
 
             Logger.Out("[STAT] Initialising systems...");
 
+            Random = new Random();
             AccountNameFromDisplay = new Dictionary<string, string>();
             OnlineBotPlayers = new Dictionary<string, RwPlayer>();
             OnlineRealPlayers = new Dictionary<string, RwPlayer>();
@@ -784,7 +787,7 @@ namespace Oddmatics.RozWorld.Server
 
             if (player.ChatHooked)
             {
-                player.CallChatHook(chatPacket.Message);
+                player.ChatHook(player, chatPacket.Message);
                 return;
             }
 

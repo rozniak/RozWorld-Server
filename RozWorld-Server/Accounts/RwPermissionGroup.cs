@@ -1,5 +1,5 @@
 ﻿/**
- * Oddmatics.RozWorld.Server.Accounts.PermissionGroup -- RozWorld Server Permission Group Implementation
+ * Oddmatics.RozWorld.Server.Accounts.RwPermissionGroup -- RozWorld Server Permission Group Implementation
  *
  * This source-code is part of the server library for the RozWorld project by rozza of Oddmatics:
  * <<http://www.oddmatics.uk>>
@@ -30,7 +30,11 @@ namespace Oddmatics.RozWorld.Server.Accounts
             get { return _ColourModifier; }
             set { if (ChatColour.IsChatColour(value)) _ColourModifier = value; }
         }
-        public bool Default { get; set; }
+        public bool IsDefault
+        {
+            get { return RwCore.Server.PermissionAuthority.DefaultGroup == this; }
+            set { RwCore.Server.PermissionAuthority.DefaultGroup = this; }
+        }
         private List<IAccount> _Members;
         public IList<IAccount> Members
         {
@@ -70,7 +74,7 @@ namespace Oddmatics.RozWorld.Server.Accounts
             ChatPrefix = String.Empty;
             ChatSuffix = String.Empty;
             ColourModifier = ChatColour.DEFAULT;
-            Default = false;
+            IsDefault = false;
             _Name = String.Empty;
             _Members = new List<IAccount>();
             _Permissions = new List<string>();
@@ -82,7 +86,7 @@ namespace Oddmatics.RozWorld.Server.Accounts
             ChatPrefix = data.Prefix;
             ChatSuffix = data.Suffix;
             ColourModifier = data.Colour;
-            Default = data.Default;
+            IsDefault = data.Default;
             _Name = data.Name;
             _Members = new List<IAccount>();
             _Permissions = new List<string>(data.Permissions);
@@ -159,7 +163,7 @@ namespace Oddmatics.RozWorld.Server.Accounts
             File = new PermissionGroupFile();
 
             File.Colour = ColourModifier;
-            File.Default = RwCore.Server.PermissionAuthority.DefaultGroupName == Name;
+            File.Default = RwCore.Server.PermissionAuthority.DefaultGroup == this;
             File.Name = Name;
             File.Permissions = Permissions.ToArray();
             File.Prefix = ChatPrefix;

@@ -69,9 +69,9 @@ namespace Oddmatics.RozWorld.Server.Entities
         public override bool VisibleOnScoreboard { get; set; }
 
 
-        private ChatHookCallback ChatHook;
-        private bool ChatHookActive;
+        public ChatHookCallback ChatHook { get; private set; }
         public bool ChatHooked { get { return ChatHook != null; } }
+        private int ChatHookToken;
         private ConnectedClient Client;
 
 
@@ -112,13 +112,6 @@ namespace Oddmatics.RozWorld.Server.Entities
             throw new NotImplementedException();
         }
 
-        public void CallChatHook(string message)
-        {
-            ChatHookActive = true;
-            ChatHook(this, message);
-            ChatHookActive = false;
-        }
-
         public bool Disconnect(byte reason)
         {
             // If this is a real player, send the disconnect packet, otherwise continue as normal
@@ -133,15 +126,16 @@ namespace Oddmatics.RozWorld.Server.Entities
             return Account.HasPermission(key);
         }
 
-        public override bool HookChatToCallback(ChatHookCallback callback)
+        public override int HookChatToCallback(ChatHookCallback callback)
         {
             if (!ChatHooked)
             {
                 ChatHook = callback;
-                return true;
+                ChatHookToken = ((RwServer)RwCore.Server).Random.Next(1, int.MaxValue);
+                return ChatHookToken;
             }
 
-            return false;
+            return -1;
         }
 
         public override bool Kick(string reason = "")
@@ -149,10 +143,16 @@ namespace Oddmatics.RozWorld.Server.Entities
             return ((RwServer)RwCore.Server).Kick(this, reason);
         }
 
-        public override void ReleaseChatHook()
+        public override bool ReleaseChatHook(int token)
         {
-            if (ChatHooked && ChatHookActive)
+            if (ChatHooked && token == ChatHookToken)
+            {
                 ChatHook = null;
+                ChatHookToken = 0;
+                return true;
+            }
+
+            return false;
         }
 
         public override void Save(string destination = "")
