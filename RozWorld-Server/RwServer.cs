@@ -755,6 +755,15 @@ namespace Oddmatics.RozWorld.Server
             HasStarted = false;
         }
 
+        public void ThrowFatalError(string message)
+        {
+            Logger.Out("[FATAL] A fatal error has been thrown, the server will now shut down.");
+            Logger.Out("[FATAL-MSG] Message reported: " + message);
+            Logger.Out("------");
+
+            Stop();
+        }
+
         public bool WorldAvailable(string name)
         {
             return false; // TODO: code this
