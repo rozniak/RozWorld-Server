@@ -19,6 +19,7 @@ using Oddmatics.RozWorld.Net.Server;
 using Oddmatics.RozWorld.Server.Accounts;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text.RegularExpressions;
 
 namespace Oddmatics.RozWorld.Server.Entities
@@ -154,9 +155,27 @@ namespace Oddmatics.RozWorld.Server.Entities
                 ChatHook = null;
         }
 
-        public void Save()
+        public override void Save(string destination = "")
         {
+            // Do not save if this is a bot player
+            if (!IsRealPlayer)
+                return;
+
             // TODO: Save player data here
+            string accountsDir = destination == "" ?
+                RwServer.DIRECTORY_ACCOUNTS :
+                destination;
+            string playersDir = destination == "" ?
+                RwServer.DIRECTORY_PLAYERS :
+                destination;
+
+            if (Directory.Exists(destination) || string.IsNullOrEmpty(destination))
+            {
+                Account.Save(accountsDir + "\\" + Account.Username.ToLower() + "." + 
+                    DisplayName.ToLower() + ".acc");
+
+                // Save player data here
+            }
         }
 
         public override void SendInviteTo(Player recipient)

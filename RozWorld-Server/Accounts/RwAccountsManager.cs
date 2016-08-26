@@ -9,6 +9,7 @@
  * Sharing, editing and general licence term information can be found inside of the "LICENCE.MD" file that should be located in the root of this project's directory structure.
  */
 
+using Oddmatics.RozWorld.API.Server.Entities;
 using Oddmatics.RozWorld.API.Generic;
 using Oddmatics.RozWorld.API.Server.Accounts;
 using Oddmatics.RozWorld.Formats;
@@ -65,6 +66,14 @@ namespace Oddmatics.RozWorld.Server.Accounts
         public bool RenameAccount(IAccount account, string newName)
         {
             throw new System.NotImplementedException();
+        }
+
+        public void Save()
+        {
+            foreach (Player player in RwCore.Server.OnlinePlayers)
+            {
+                player.Account.Save();
+            }
         }
     }
 }

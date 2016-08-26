@@ -161,5 +161,13 @@ namespace Oddmatics.RozWorld.Server.Accounts
 
             return false;
         }
+
+        public void Save()
+        {
+            foreach (IPermissionGroup group in GroupRegistry.Values)
+            {
+                group.Save();
+            }
+        }
     }
 }

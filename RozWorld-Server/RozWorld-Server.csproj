@@ -31,7 +31,8 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Oddmatics.RozWorld.API">
+    <Reference Include="Oddmatics.RozWorld.API, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\RozWorld-API\RozWorld-API\bin\Debug\Oddmatics.RozWorld.API.dll</HintPath>
     </Reference>
     <Reference Include="Oddmatics.RozWorld.Formats">

@@ -261,17 +261,15 @@ namespace Oddmatics.RozWorld.Server.Accounts
             return ErrorMessage.INCORRECT_LOGIN;
         }
 
-        public bool Save()
+        public void Save(string destination = "")
         {
             try
             {
                 // TODO: Save here
-                return true;
             }
             catch (Exception ex)
             {
                 RwCore.Server.Logger.Out("[ERR] Unable to save account '" + Username + "'. Exception: " + ex.Message);
-                return false;
             }
         }
 

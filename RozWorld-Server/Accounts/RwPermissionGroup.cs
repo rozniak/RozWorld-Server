@@ -145,5 +145,23 @@ namespace Oddmatics.RozWorld.Server.Accounts
 
             return true;
         }
+
+        public void Save(string destination = "")
+        {
+            string fileDestination = destination == String.Empty ?
+                RwServer.DIRECTORY_PERMISSIONS + @"\group-" + Name.ToLower() :
+                destination;
+
+            File = new PermissionGroupFile();
+
+            File.Colour = ColourModifier;
+            File.Default = RwCore.Server.PermissionAuthority.DefaultGroupName == Name;
+            File.Name = Name;
+            File.Permissions = Permissions.ToArray();
+            File.Prefix = ChatPrefix;
+            File.Suffix = ChatSuffix;
+
+            File.Save(fileDestination);
+        }
     }
 }

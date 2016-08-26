@@ -455,6 +455,20 @@ namespace Oddmatics.RozWorld.Server
             // Restart here
         }
 
+        public void Save()
+        {
+            // Save players
+            foreach (Player player in OnlineRealPlayers.Values)
+            {
+                player.Save();
+            }
+
+            // Save permission information
+            PermissionAuthority.Save();
+
+            // TODO: Save worlds here and anything else that needs saving
+        }
+
         public bool SendCommand(ICommandCaller sender, string cmd)
         {
             try
