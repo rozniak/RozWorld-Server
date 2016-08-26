@@ -42,18 +42,36 @@ namespace Oddmatics.RozWorld.Server.Accounts
 
         public bool DeleteAccount(string name)
         {
-            throw new System.NotImplementedException();
+            // If a player is logged into this account, do not proceed
+            if (RwCore.Server.GetPlayerByUsername(name) != null)
+                return false;
+
+            // Remove any and all account matches
+            string[] accountsFound = Directory.GetFiles(RwServer.DIRECTORY_ACCOUNTS,
+                name.ToLower() + ".*.acc");
+
+            foreach (string file in accountsFound)
+            {
+                File.Delete(file);
+            }
+
+            return true;
         }
 
         public bool DeleteAccount(IAccount account)
         {
-            throw new System.NotImplementedException();
+            return DeleteAccount(account.Username);
         }
 
         public IAccount GetAccount(string name)
         {
-            // TODO: Perform check to see if player with account is currently online
+            // See if player is online, retrieve their account if so
+            Player player = RwCore.Server.GetPlayerByUsername(name);
 
+            if (player != null)
+                return player.Account;
+
+            // Player not online, load from disk
             string accountName = name.ToLower();
             string[] foundAccounts = Directory.GetFiles(RwServer.DIRECTORY_ACCOUNTS, accountName + ".*.acc");
 
@@ -65,7 +83,27 @@ namespace Oddmatics.RozWorld.Server.Accounts
 
         public bool RenameAccount(IAccount account, string newName)
         {
-            throw new System.NotImplementedException();
+            // If a player is logged into this account, do not proceed
+            if (RwCore.Server.GetPlayerByUsername(account.Username) != null)
+                return false;
+
+            var rwAccount = (RwAccount)account;
+            string oldFile = RwServer.DIRECTORY_ACCOUNTS + "\\" + account.Fqn + ".acc";
+
+            rwAccount.Username = newName;
+
+            if (rwAccount.Username == newName)
+            {
+
+                if (File.Exists(oldFile))
+                    File.Delete(oldFile);
+
+                account.Save();
+
+                return true;
+            }
+
+            return false;
         }
 
         public void Save()

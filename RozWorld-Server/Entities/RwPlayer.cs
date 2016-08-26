@@ -161,7 +161,6 @@ namespace Oddmatics.RozWorld.Server.Entities
             if (!IsRealPlayer)
                 return;
 
-            // TODO: Save player data here
             string accountsDir = destination == "" ?
                 RwServer.DIRECTORY_ACCOUNTS :
                 destination;
@@ -171,10 +170,9 @@ namespace Oddmatics.RozWorld.Server.Entities
 
             if (Directory.Exists(destination) || string.IsNullOrEmpty(destination))
             {
-                Account.Save(accountsDir + "\\" + Account.Username.ToLower() + "." + 
-                    DisplayName.ToLower() + ".acc");
+                Account.Save(accountsDir + "\\" + Account.Fqn + ".acc");
 
-                // Save player data here
+                // TODO: Save player data here
             }
         }
 

@@ -746,8 +746,6 @@ namespace Oddmatics.RozWorld.Server
 
             Save();
 
-            // TODO: Save world and stuff
-
             if (Stopped != null)
                 Stopped(this, EventArgs.Empty);
 

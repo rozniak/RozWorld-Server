@@ -92,6 +92,7 @@ namespace Oddmatics.RozWorld.Server.Accounts
                 }
             }
         }
+        public string Fqn { get { return Username + "." + DisplayName; } }
         public IPAddress LastLoginIP
         {
             get { return AccountFile.LastLogInIP; }
@@ -131,7 +132,11 @@ namespace Oddmatics.RozWorld.Server.Accounts
             }
         }
         public Player PlayerInstance { get; private set; }
-        public string Username { get { return AccountFile.Username; } }
+        public string Username
+        {
+            get { return AccountFile.Username; }
+            set { if (RwPlayer.ValidName(value)) AccountFile.Username = value; }
+        }
 
 
         private AccountFile AccountFile;
@@ -265,7 +270,12 @@ namespace Oddmatics.RozWorld.Server.Accounts
         {
             try
             {
-                // TODO: Save here
+                // **This account was MEANT to be saved!
+                string finalDestination = String.IsNullOrEmpty(destination) ?
+                    RwServer.DIRECTORY_ACCOUNTS + "\\" + Fqn + ".acc" :
+                    destination;
+
+                AccountFile.Save(finalDestination);
             }
             catch (Exception ex)
             {
