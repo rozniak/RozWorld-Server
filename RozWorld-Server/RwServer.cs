@@ -612,8 +612,47 @@ namespace Oddmatics.RozWorld.Server
             GameTime = new Timer();
             GameTime.Elapsed += new ElapsedEventHandler(GameTime_Elapsed);
 
-            ((RwPermissionAuthority)PermissionAuthority).Load(); // Load perm groups
+
+            // Permission group / auth stuff
+
+            var permAuth = (RwPermissionAuthority)PermissionAuthority;
+            permAuth.Load(); // Load perm groups
             ServerCommands.Register(); // Register commands and permissions for the server
+
+            if (permAuth.DefaultGroup == null)
+            {
+                RwCore.Server.Logger.Out("[ERR] No default group set, attempting to create a new default group.");
+
+                IPermissionGroup group = permAuth.CreateNewGroup("default");
+
+                if (group != null)
+                {
+                    group.IsDefault = true;
+
+                    // TODO: Add default perm file to resources and use that instead
+                    group.AddPermission("rwcore.build.*");
+                    group.AddPermission("rwcore.list");
+                    group.AddPermission("rwcore.me");
+                    group.AddPermission("rwcore.msg");
+                    group.AddPermission("rwcore.say.self");
+                    group.AddPermission("rwcore.slap");
+                    group.AddPermission("rwcore.whisper");
+
+                    group.Save();
+                }
+                else
+                {
+                    Logger.Out("[ERR] Failed to load/create default group - cannot proceed.");
+
+                    if (FatalError != null)
+                        FatalError(this, EventArgs.Empty);
+
+                    return;
+                }
+            }
+
+            
+            // Settings and plugins
 
             Logger.Out("[STAT] Setting configs...");
 

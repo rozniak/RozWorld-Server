@@ -55,7 +55,7 @@ namespace Oddmatics.RozWorld.Server.Accounts
                 string originalValue = _Name;
                 string realValue = value.ToLower();
 
-                if (_Name == String.Empty)
+                if (String.IsNullOrEmpty(_Name))
                     _Name = realValue;
                 else if (RwCore.Server.PermissionAuthority.GetGroup(realValue) == null) // Make sure group name is free
                 {
@@ -157,7 +157,7 @@ namespace Oddmatics.RozWorld.Server.Accounts
         public void Save(string destination = "")
         {
             string fileDestination = destination == String.Empty ?
-                RwServer.DIRECTORY_PERMISSIONS + @"\group-" + Name.ToLower() :
+                RwServer.DIRECTORY_PERMISSIONS + @"\group-" + Name.ToLower() + ".json":
                 destination;
 
             File = new PermissionGroupFile();

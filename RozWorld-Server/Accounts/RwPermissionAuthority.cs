@@ -13,6 +13,7 @@ using Oddmatics.RozWorld.API.Generic;
 using Oddmatics.RozWorld.API.Generic.Chat;
 using Oddmatics.RozWorld.API.Server.Accounts;
 using Oddmatics.RozWorld.Formats;
+using Oddmatics.Util.IO;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -80,7 +81,9 @@ namespace Oddmatics.RozWorld.Server.Accounts
             if (!GroupRegistry.ContainsKey(realName))
             {
                 var newGroup = new RwPermissionGroup();
+                newGroup.Name = name;
                 GroupRegistry.Add(realName, newGroup);
+                newGroup.Save();
                 return newGroup;
             }
 
@@ -126,7 +129,7 @@ namespace Oddmatics.RozWorld.Server.Accounts
 
                     if (GroupRegistry.ContainsKey(realName))
                     {
-                        RwCore.Server.Logger.Out("[WARNING] (PermGroups) Duplicate group entry for '"
+                        RwCore.Server.Logger.Out("[WARNING] PermissionAuthority: Duplicate group entry for '"
                             + file.Name + "'.");
                         GroupRegistry.Remove(realName);
                     }
@@ -136,11 +139,10 @@ namespace Oddmatics.RozWorld.Server.Accounts
                 }
                 catch (Exception ex)
                 {
-                    RwCore.Server.Logger.Out("[ERR] (PermGroups) Failed to load '" + filename + "'.");
+                    RwCore.Server.Logger.Out("[ERR] PermissionAuthority: Failed to load '" + filename + "'.");
                     RwCore.Server.Logger.Out(ex.Message);
                     RwCore.Server.Logger.Out(ex.StackTrace);
                 }
-                
             }
 
             Loaded = true;
