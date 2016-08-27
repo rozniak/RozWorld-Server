@@ -25,6 +25,7 @@ using Oddmatics.RozWorld.Net.Server.Event;
 using Oddmatics.RozWorld.Server.Accounts;
 using Oddmatics.RozWorld.Server.Entities;
 using Oddmatics.RozWorld.Server.Game;
+using Oddmatics.RozWorld.Server.Properties;
 using Oddmatics.Util.IO;
 using System;
 using System.Collections.Generic;
@@ -88,6 +89,11 @@ namespace Oddmatics.RozWorld.Server
         /// The text file containing banned ips.
         /// </summary>
         public static string FILE_IP_BANS = Directory.GetCurrentDirectory() + "\\ipbans.txt";
+
+        /// <summary>
+        /// The special argument trigger to pass 'default' options to a function.
+        /// </summary>
+        public static string SPECIAL_ARG_DEFAULT = ":default:";
 
         #endregion
 
@@ -314,31 +320,11 @@ namespace Oddmatics.RozWorld.Server
             return Kick(GetPlayer(name), reason);
         }
 
-        private void LoadConfigDefaults()
-        {
-            // TODO: Improve this loading later!
-
-            AutosaveEnabled = true;
-            AutosaveInterval = 1800000;
-            BrowserName = "RozWorld Server";
-            HostingPort = 41715;
-            MaxPlayers = 20;
-            GameTime.Interval = 10;
-            IsWhitelisted = false;
-            FormattingString = "<%disp%>";
-            SpawnWorldGenerator = "Default";
-            SpawnWorldGeneratorOptions = "none";
-            GameMode = GameMode.Books;
-            GameDifficulty = Difficulty.Medium;
-            
-            // TODO: Clan stuff here
-        }
-
         private void LoadConfigs(string configFile)
         {
-            LoadConfigDefaults();
-
-            var configs = FileSystem.ReadINIToDictionary(configFile);
+            var configs = configFile == SPECIAL_ARG_DEFAULT ?
+                FileSystem.ReadINIToDictionary(Resources.DefaultConfigs.Split('\n')) :
+                FileSystem.ReadINIToDictionary(configFile);
 
             foreach (var item in configs)
             {
@@ -630,13 +616,10 @@ namespace Oddmatics.RozWorld.Server
                     group.IsDefault = true;
 
                     // TODO: Add default perm file to resources and use that instead
-                    group.AddPermission("rwcore.build.*");
-                    group.AddPermission("rwcore.list");
-                    group.AddPermission("rwcore.me");
-                    group.AddPermission("rwcore.msg");
-                    group.AddPermission("rwcore.say.self");
-                    group.AddPermission("rwcore.slap");
-                    group.AddPermission("rwcore.whisper");
+                    foreach (string perm in Resources.DefaultPermissions.Split('\n'))
+                    {
+                        group.AddPermission(perm);
+                    }
 
                     group.Save();
                 }
@@ -659,6 +642,7 @@ namespace Oddmatics.RozWorld.Server
             if (!File.Exists(FILE_CONFIG))
                 MakeDefaultConfigs(FILE_CONFIG);
 
+            LoadConfigs(SPECIAL_ARG_DEFAULT); // Load defaults first!
             LoadConfigs(FILE_CONFIG);
 
             Logger.Out("[STAT] Loading plugins...");

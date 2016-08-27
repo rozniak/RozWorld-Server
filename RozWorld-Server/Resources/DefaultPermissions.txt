@@ -1,0 +1,7 @@
+rwcore.build.*
+rwcore.list
+rwcore.me
+rwcore.msg
+rwcore.say.self
+rwcore.slap
+rwcore.whisper

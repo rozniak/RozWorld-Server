@@ -68,28 +68,42 @@ namespace Oddmatics.RozWorld.Server.Properties {
         ///
         ///
         ///# Server specific options
+        ///autosave-enabled:true
+        ///autosave-interval:1800000
         ///browser-name:RozWorld Server
         ///host-port:41715
         ///max-players:20
         ///tick-rate:10
         ///whitelist:false
         ///
+        ///# Chat related options
+        ///name-formatting:&lt;%disp%&gt;
+        ///
         ///# World generation options
         ///generator:Default
         ///generator-options:none
         ///
         ///# Game settings
-        ///game-mode:books
-        ///difficulty:3
-        ///
-        ///# Player settings
-        ///default-group:normal
-        ///enable-clans:true
-        ///max-clan-mem [rest of string was truncated]&quot;;.
+        ///dif [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string DefaultConfigs {
             get {
                 return ResourceManager.GetString("DefaultConfigs", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to rwcore.build.*
+        ///rwcore.list
+        ///rwcore.me
+        ///rwcore.msg
+        ///rwcore.say.self
+        ///rwcore.slap
+        ///rwcore.whisper.
+        /// </summary>
+        internal static string DefaultPermissions {
+            get {
+                return ResourceManager.GetString("DefaultPermissions", resourceCulture);
             }
         }
     }
