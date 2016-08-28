@@ -136,6 +136,9 @@ namespace Oddmatics.RozWorld.Server.Accounts
 
                     var group = new RwPermissionGroup(file);
                     GroupRegistry.Add(group.Name, group);
+
+                    if (group.IsDefault)
+                        DefaultGroup = group;
                 }
                 catch (Exception ex)
                 {
