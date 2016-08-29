@@ -223,7 +223,18 @@ namespace Oddmatics.RozWorld.Server
 
         public IList<string> GetCommandsByPlugin(string plugin)
         {
-            return new List<string>().AsReadOnly(); // TODO: code this
+            var commands = new List<string>();
+
+            foreach (var registeredCommand in InstalledCommands)
+            {
+                string commandString = registeredCommand.Key;
+                Command command = registeredCommand.Value;
+
+                if (command.PluginRegistrar.EqualsIgnoreCase(plugin))
+                    commands.Add(commandString);
+            }
+
+            return commands.AsReadOnly();
         }
 
         public string GetCommandUsage(string command)
