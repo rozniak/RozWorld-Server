@@ -119,6 +119,7 @@ namespace Oddmatics.RozWorld.Server.Accounts
                 throw new InvalidOperationException("RwPermissionAuthority.Load: Server has not been set up correctly yet.");
 
             string[] groupFiles = Directory.GetFiles(RwServer.DIRECTORY_PERMISSIONS, "group-*.json");
+            RwServer server = (RwServer)RwCore.Server;
 
             foreach (string filename in groupFiles)
             {
@@ -129,7 +130,7 @@ namespace Oddmatics.RozWorld.Server.Accounts
 
                     if (GroupRegistry.ContainsKey(realName))
                     {
-                        RwCore.Server.Logger.Out("[WARNING] PermissionAuthority: Duplicate group entry for '"
+                        server.LogWithContext(RwServer.LOGGING_CONTEXT_WARNING, "PermissionAuthority: Duplicate group entry for '"
                             + file.Name + "'.");
                         GroupRegistry.Remove(realName);
                     }
@@ -142,9 +143,10 @@ namespace Oddmatics.RozWorld.Server.Accounts
                 }
                 catch (Exception ex)
                 {
-                    RwCore.Server.Logger.Out("[ERR] PermissionAuthority: Failed to load '" + filename + "'.");
-                    RwCore.Server.Logger.Out(ex.Message);
-                    RwCore.Server.Logger.Out(ex.StackTrace);
+                    server.LogWithContext(RwServer.LOGGING_CONTEXT_ERROR,
+                        "PermissionAuthority: Failed to load '" +filename + "'.");
+                    server.Logger.Out(ex.Message);
+                    server.Logger.Out(ex.StackTrace);
                 }
             }
 

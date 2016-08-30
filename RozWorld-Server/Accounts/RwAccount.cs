@@ -62,6 +62,7 @@ namespace Oddmatics.RozWorld.Server.Accounts
                     string realDisplayName = DisplayName.ToLower();
                     string realUsername = Username.ToLower();
                     string realValue = value.ToLower();
+                    RwServer server = (RwServer)RwCore.Server;
 
                     // Check if name already in use
                     if (Directory.GetFiles(RwServer.DIRECTORY_ACCOUNTS, "*." + realValue + ".acc").Length == 0)
@@ -81,14 +82,16 @@ namespace Oddmatics.RozWorld.Server.Accounts
                         catch (Exception ex)
                         {
                             // Some error, log it and do not continue the changes
-                            RwCore.Server.Logger.Out("[ERR] Problem whilst changing display name for user '" +
+                            server.LogWithContext(RwServer.LOGGING_CONTEXT_ERROR,
+                                "Problem whilst changing display name for user '" +
                                 Username + "', exception: " + ex.Message);
-                            RwCore.Server.Logger.Out("[ERR] Stack trace: " + ex.StackTrace);
+                            server.LogWithContext(RwServer.LOGGING_CONTEXT_ERROR,
+                                "Stack trace: " + ex.StackTrace);
                         }
                     }
                     else
-                        RwCore.Server.Logger.Out("[ERR] Failed to set new display name for user '" + Username +
-                            "': name value is already in use!");
+                        server.LogWithContext(RwServer.LOGGING_CONTEXT_ERROR, "Failed to set new display name for user '"
+                            + Username + "': name value is already in use!");
                 }
             }
         }
@@ -153,6 +156,7 @@ namespace Oddmatics.RozWorld.Server.Accounts
                 realUsername + ".*.acc");
             string[] permFiles = Directory.GetFiles(RwServer.DIRECTORY_PERMISSIONS,
                 "player-" + realUsername + ".json");
+            RwServer server = (RwServer)RwCore.Server;
 
             Exists = false;
             LoggedIn = false;
@@ -172,12 +176,13 @@ namespace Oddmatics.RozWorld.Server.Accounts
                 var permFile = PlayerPermissionFile.FromFile(permFiles[0]);
 
                 if (!permFile.Name.EqualsIgnoreCase(Username)) // Check for name mismatch
-                    RwCore.Server.Logger.Out("[WARN] Permission file for " + Username + ", 'name' value mismatch. This may or may not be intended.");
+                    server.LogWithContext(RwServer.LOGGING_CONTEXT_WARNING, 
+                        "Permission file for " + Username + ", 'name' value mismatch. This may or may not be intended.");
 
                 ChatPrefix = permFile.Prefix;
                 ChatSuffix = permFile.Suffix;
                 ColourModifier = permFile.Colour;
-                PermissionGroup = RwCore.Server.PermissionAuthority
+                PermissionGroup = server.PermissionAuthority
                     .GetGroup(permFile.Group);
 
                 PermissionStates = new Dictionary<string, PermissionState>();
@@ -188,7 +193,7 @@ namespace Oddmatics.RozWorld.Server.Accounts
                 {
                     string realPerm = perm.ToLower();
 
-                    if (RwCore.Server.PermissionAuthority.RegisteredPermissions.Contains(realPerm))
+                    if (server.PermissionAuthority.RegisteredPermissions.Contains(realPerm))
                         PermissionStates.Add(realPerm, PermissionState.Granted);
                 }
 
@@ -196,7 +201,7 @@ namespace Oddmatics.RozWorld.Server.Accounts
                 {
                     string realPerm = perm.ToLower();
 
-                    if (RwCore.Server.PermissionAuthority.RegisteredPermissions.Contains(realPerm))
+                    if (server.PermissionAuthority.RegisteredPermissions.Contains(realPerm))
                         PermissionStates.Add(realPerm, PermissionState.Denied);
                 }
 
@@ -279,7 +284,8 @@ namespace Oddmatics.RozWorld.Server.Accounts
             }
             catch (Exception ex)
             {
-                RwCore.Server.Logger.Out("[ERR] Unable to save account '" + Username + "'. Exception: " + ex.Message);
+                ((RwServer)RwCore.Server).LogWithContext(RwServer.LOGGING_CONTEXT_ERROR,
+                    "Unable to save account '" + Username + "'. Exception: " + ex.Message);
             }
         }
 
