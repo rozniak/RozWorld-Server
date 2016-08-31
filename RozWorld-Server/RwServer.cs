@@ -105,6 +105,11 @@ namespace Oddmatics.RozWorld.Server
         public const string LOGGING_CONTEXT_CHAT = "CHAT";
 
         /// <summary>
+        /// The logging context string for command logs.
+        /// </summary>
+        public const string LOGGING_CONTEXT_COMMAND = "CMD";
+
+        /// <summary>
         /// The logging context string for error message logs.
         /// </summary>
         public const string LOGGING_CONTEXT_ERROR = "ERR";
@@ -468,10 +473,10 @@ namespace Oddmatics.RozWorld.Server
             }
         }
 
-        public void LogWithContext(string context, string message)
+        public void LogWithContext(string context, string message, bool colours = true)
         {
             LoggingContext = context;
-            Logger.Out(message);
+            Logger.Out(message, colours);
             LoggingContext = LOGGING_CONTEXT_PLUGIN;
         }
 
@@ -534,7 +539,8 @@ namespace Oddmatics.RozWorld.Server
         {
             try
             {
-                Logger.Out("[CMD] " + sender.DisplayName + " issued command: /" + cmd, false);
+                LogWithContext(LOGGING_CONTEXT_COMMAND, sender.DisplayName + " issued command: /" + cmd,
+                    false);
 
                 var args = new List<string>();
                 string[] cmdSplit = cmd.Split();
@@ -569,7 +575,7 @@ namespace Oddmatics.RozWorld.Server
 
         public void SendMessage(string message)
         {
-            Logger.Out(message);
+            LogWithContext(LOGGING_CONTEXT_CHAT, message);
         }
 
         public void Start()
