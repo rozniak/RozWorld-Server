@@ -29,8 +29,8 @@ namespace Oddmatics.RozWorld.Server.Accounts
             get { return _DefaultGroup; }
             set
             {
-                // Verify that the group being set is actually registered
-                if (GroupRegistry.ContainsValue(value))
+                // Verify that the group being set is actually registered or is loading
+                if (GroupRegistry.ContainsValue(value) || !Loaded)
                     _DefaultGroup = value;
             }
         }
