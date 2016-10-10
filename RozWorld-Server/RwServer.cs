@@ -695,7 +695,7 @@ namespace Oddmatics.RozWorld.Server
                     group.IsDefault = true;
 
                     // TODO: Add default perm file to resources and use that instead
-                    foreach (string perm in Resources.DefaultPermissions.Split('\n'))
+                    foreach (string perm in Resources.DefaultPermissions.Replace("\n", "").Split('\r'))
                     {
                         group.AddPermission(perm);
                     }

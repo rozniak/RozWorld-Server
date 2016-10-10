@@ -42,7 +42,7 @@
       <HintPath>..\..\RozWorld-Net\RozWorld-Net\bin\Debug\Oddmatics.RozWorld.Net.dll</HintPath>
     </Reference>
     <Reference Include="Oddmatics.Util.IO">
-      <HintPath>..\..\Oddmatics-IO\Oddmatics-IO\bin\Release\Oddmatics.Util.IO.dll</HintPath>
+      <HintPath>..\..\Oddmatics-IO\Oddmatics-IO\bin\Debug\Oddmatics.Util.IO.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
