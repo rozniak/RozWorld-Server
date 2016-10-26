@@ -17,7 +17,7 @@ using System.Collections.Generic;
 
 namespace Oddmatics.RozWorld.Server.Game
 {
-    public class RwContentManager : IContentManager
+    public sealed class RwContentManager : IContentManager
     {
         public IEntityFactory EntityFactory { get; private set; }
         private Dictionary<Type, List<byte>> EntityStates;

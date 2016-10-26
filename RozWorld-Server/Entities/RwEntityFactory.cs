@@ -17,7 +17,7 @@ using Oddmatics.RozWorld.API.Generic;
 
 namespace Oddmatics.RozWorld.Server.Entities
 {
-    public class RwEntityFactory : IEntityFactory
+    public sealed class RwEntityFactory : IEntityFactory
     {
         private Dictionary<string, Type> AvailableTypes = new Dictionary<string, Type>();
 

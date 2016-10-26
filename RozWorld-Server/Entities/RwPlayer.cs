@@ -24,7 +24,7 @@ using System.Text.RegularExpressions;
 
 namespace Oddmatics.RozWorld.Server.Entities
 {
-    public class RwPlayer : Player
+    public sealed class RwPlayer : Player
     {
         public override IAccount Account { get; protected set; }
         public override bool AFK { get; set; }
@@ -119,6 +119,11 @@ namespace Oddmatics.RozWorld.Server.Entities
                 Client.SendPacket(new DisconnectActionPacket(reason, Client.NextAckId));
 
             return true;
+        }
+
+        protected override void EntityUpdate()
+        {
+            throw new NotImplementedException();
         }
 
         public override bool HasPermission(string key)

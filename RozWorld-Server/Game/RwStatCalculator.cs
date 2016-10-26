@@ -15,7 +15,7 @@ using Oddmatics.RozWorld.API.Server.Game;
 
 namespace Oddmatics.RozWorld.Server.Game
 {
-    public class RwStatCalculator : IStatCalculator
+    public sealed class RwStatCalculator : IStatCalculator
     {
         public int GetMaxHealth(int level, double mu = 1)
         {

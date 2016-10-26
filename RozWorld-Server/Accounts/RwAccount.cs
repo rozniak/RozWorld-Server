@@ -28,7 +28,7 @@ using System.Security.Cryptography;
 
 namespace Oddmatics.RozWorld.Server.Accounts
 {
-    public class RwAccount : IAccount
+    public sealed class RwAccount : IAccount
     {
         public string ChatPrefix { get; set; }
         public string ChatSuffix { get; set; }

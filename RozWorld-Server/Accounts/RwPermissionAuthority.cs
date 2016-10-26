@@ -21,7 +21,7 @@ using System.Text.RegularExpressions;
 
 namespace Oddmatics.RozWorld.Server.Accounts
 {
-    public class RwPermissionAuthority : IPermissionAuthority
+    public sealed class RwPermissionAuthority : IPermissionAuthority
     {
         private IPermissionGroup _DefaultGroup;
         public IPermissionGroup DefaultGroup

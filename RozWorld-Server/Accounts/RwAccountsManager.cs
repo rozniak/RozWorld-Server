@@ -23,7 +23,7 @@ using System.Net;
 
 namespace Oddmatics.RozWorld.Server.Accounts
 {
-    public class RwAccountsManager : IAccountsManager
+    public sealed class RwAccountsManager : IAccountsManager
     {
         public int AccountCount { get { return Directory.GetFiles(RwServer.DIRECTORY_ACCOUNTS, "*.*.acc").Length; } }
 

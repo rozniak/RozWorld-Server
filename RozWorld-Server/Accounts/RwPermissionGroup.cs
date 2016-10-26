@@ -20,7 +20,7 @@ using System.Text.RegularExpressions;
 
 namespace Oddmatics.RozWorld.Server.Accounts
 {
-    public class RwPermissionGroup : IPermissionGroup
+    public sealed class RwPermissionGroup : IPermissionGroup
     {
         public string ChatPrefix { get; set; }
         public string ChatSuffix { get; set; }

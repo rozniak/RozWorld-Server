@@ -40,7 +40,7 @@ using System.Timers;
 
 namespace Oddmatics.RozWorld.Server
 {
-    public class RwServer : IRwServer
+    public sealed class RwServer : IRwServer
     {
         #region Path Constants
 

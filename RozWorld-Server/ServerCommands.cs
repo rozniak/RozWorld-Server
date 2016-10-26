@@ -23,7 +23,7 @@ using System.Text.RegularExpressions;
 
 namespace Oddmatics.RozWorld.Server
 {
-    static class ServerCommands
+    internal static class ServerCommands
     {
         private const string ERROR_INVALID_ARGS_LENGTH = "Invalid amount of arguments passed for ";
         private const string ERROR_INVALID_PERMISSIONS = "You do not have permission to execute command ";
