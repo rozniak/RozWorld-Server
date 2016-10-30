@@ -82,15 +82,15 @@ namespace Oddmatics.RozWorld.Server.Accounts
                         catch (Exception ex)
                         {
                             // Some error, log it and do not continue the changes
-                            server.LogWithContext(RwServer.LOGGING_CONTEXT_ERROR,
+                            server.LogWithContext(LoggingContext.ERROR,
                                 "Problem whilst changing display name for user '" +
                                 Username + "', exception: " + ex.Message);
-                            server.LogWithContext(RwServer.LOGGING_CONTEXT_ERROR,
+                            server.LogWithContext(LoggingContext.ERROR,
                                 "Stack trace: " + ex.StackTrace);
                         }
                     }
                     else
-                        server.LogWithContext(RwServer.LOGGING_CONTEXT_ERROR, "Failed to set new display name for user '"
+                        server.LogWithContext(LoggingContext.ERROR, "Failed to set new display name for user '"
                             + Username + "': name value is already in use!");
                 }
             }
@@ -176,7 +176,7 @@ namespace Oddmatics.RozWorld.Server.Accounts
                 var permFile = PlayerPermissionFile.FromFile(permFiles[0]);
 
                 if (!permFile.Name.EqualsIgnoreCase(Username)) // Check for name mismatch
-                    server.LogWithContext(RwServer.LOGGING_CONTEXT_WARNING, 
+                    server.LogWithContext(LoggingContext.WARNING, 
                         "Permission file for " + Username + ", 'name' value mismatch. This may or may not be intended.");
 
                 ChatPrefix = permFile.Prefix;
@@ -284,7 +284,7 @@ namespace Oddmatics.RozWorld.Server.Accounts
             }
             catch (Exception ex)
             {
-                ((RwServer)RwCore.Server).LogWithContext(RwServer.LOGGING_CONTEXT_ERROR,
+                ((RwServer)RwCore.Server).LogWithContext(LoggingContext.ERROR,
                     "Unable to save account '" + Username + "'. Exception: " + ex.Message);
             }
         }
