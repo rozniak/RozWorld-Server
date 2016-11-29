@@ -522,6 +522,12 @@ namespace Oddmatics.RozWorld.Server
 
         public void Start()
         {
+            StartupInitial();
+            StartupFinal();
+        }
+
+        private void StartupInitial()
+        {
             // A logger must be set and this should be set as the current server in RwCore
             if (RwCore.Server != this)
                 throw new InvalidOperationException("RwServer.Start: RwCore.Server must reference this server instance before calling Start().");
@@ -655,7 +661,7 @@ namespace Oddmatics.RozWorld.Server
                 }
             }
 
-            
+
             // Settings and plugins
 
             LogWithContext(LoggingContext.STATUS, "Setting configs...");
@@ -665,7 +671,10 @@ namespace Oddmatics.RozWorld.Server
 
             LoadConfigs(SPECIAL_ARG_DEFAULT); // Load defaults first!
             LoadConfigs(FILE_CONFIG);
+        }
 
+        private void StartupFinal()
+        {
             LogWithContext(LoggingContext.STATUS, "Loading plugins...");
 
             _Plugins = new List<IPlugin>();
