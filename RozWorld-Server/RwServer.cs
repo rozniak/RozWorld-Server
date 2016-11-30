@@ -193,6 +193,11 @@ namespace Oddmatics.RozWorld.Server
             }
         }
 
+        /// <summary>
+        /// Passes in and handles a message/command from the console.
+        /// </summary>
+        /// <param name="message">The message to handle.</param>
+        /// <returns>True if the message was handled successfully.</returns>
         public bool Do(string message)
         {
             if (ChatHooked)
@@ -206,6 +211,10 @@ namespace Oddmatics.RozWorld.Server
             return false;
         }
 
+        /// <summary>
+        /// Drops a player from the game.
+        /// </summary>
+        /// <param name="player">The instance of the Player to drop.</param>
         private void DropPlayer(Player player)
         {
             ((RwPlayer)player).Save();
@@ -213,6 +222,9 @@ namespace Oddmatics.RozWorld.Server
             AccountNameFromDisplay.Remove(player.DisplayName.ToLower());
         }
 
+        /// <summary>
+        /// Implementation of IRwServer.GetCommandDescription.
+        /// </summary>
         public string GetCommandDescription(string command)
         {
             string realCmd = command.ToLower();
@@ -223,6 +235,9 @@ namespace Oddmatics.RozWorld.Server
             return String.Empty;
         }
 
+        /// <summary>
+        /// Implementation of IRwServer.GetCommandsByPlugin.
+        /// </summary>
         public IList<string> GetCommandsByPlugin(string plugin)
         {
             var commands = new List<string>();
@@ -239,6 +254,9 @@ namespace Oddmatics.RozWorld.Server
             return commands.AsReadOnly();
         }
 
+        /// <summary>
+        /// Implementation of IRwServer.GetCommandUsage.
+        /// </summary>
         public string GetCommandUsage(string command)
         {
             string realCmd = command.ToLower();
@@ -249,6 +267,9 @@ namespace Oddmatics.RozWorld.Server
             return String.Empty;
         }
 
+        /// <summary>
+        /// Implementation of IRwServer.GetPlayer.
+        /// </summary>
         public Player GetPlayer(string name)
         {
             Player player = null;
@@ -267,11 +288,17 @@ namespace Oddmatics.RozWorld.Server
             return player;
         }
 
+        /// <summary>
+        /// Implementation of IRwServer.GetPlayerAbsolute.
+        /// </summary>
         public Player GetPlayerAbsolute(string name)
         {
             return null; // TODO: code this
         }
 
+        /// <summary>
+        /// Implementation of IRwServer.GetPlayerByUsername.
+        /// </summary>
         public Player GetPlayerByUsername(string username)
         {
             string realUsername = username.ToLower();
@@ -285,21 +312,33 @@ namespace Oddmatics.RozWorld.Server
             return null;
         }
 
+        /// <summary>
+        /// Implementation of IRwServer.GetPlayerByUsernameAbs.
+        /// </summary>
         public Player GetPlayerByUsernameAbs(string username)
         {
             return null; // TODO: code this
         }
 
+        /// <summary>
+        /// Implementation of IRwServer.GetWorld.
+        /// </summary>
         public IWorld GetWorld(string name)
         {
             return null; // TODO: code this
         }
 
+        /// <summary>
+        /// Implementation of ICommandCaller.HasPermission.
+        /// </summary>
         public bool HasPermission(string key)
         {
             return true; // Server has full permissions
         }
 
+        /// <summary>
+        /// Implementation of ICommandCaller.HookChatToCallback.
+        /// </summary>
         public int HookChatToCallback(ChatHookCallback callback)
         {
             if (!ChatHooked)
@@ -312,11 +351,17 @@ namespace Oddmatics.RozWorld.Server
             return -1;
         }
 
+        /// <summary>
+        /// Implementation of IRwServer.IsValidEntity.
+        /// </summary>
         public bool IsValidEntity(ushort id)
         {
             return false; // TODO: code this
         }
 
+        /// <summary>
+        /// [ADD TO API] Implementation of IRwServer.Kick.
+        /// </summary>
         public bool Kick(Player player, string reason = "")
         {
             if (player != null)
@@ -328,11 +373,18 @@ namespace Oddmatics.RozWorld.Server
             return false;
         }
 
+        /// <summary>
+        /// Implementation of IRwServer.Kick.
+        /// </summary>
         public bool Kick(string name, string reason = "")
         {
             return Kick(GetPlayer(name), reason);
         }
 
+        /// <summary>
+        /// Loads a server configuration from a file on disk.
+        /// </summary>
+        /// <param name="configFile">The filename to load from.</param>
         private void LoadConfigs(string configFile)
         {
             var configs = configFile == SPECIAL_ARG_DEFAULT ?
@@ -415,6 +467,9 @@ namespace Oddmatics.RozWorld.Server
             }
         }
 
+        /// <summary>
+        /// [TO BE REPLACED] Logs a message with the specified context.
+        /// </summary>
         public void LogWithContext(string context, string message, bool colours = true)
         {
             CurrentLogContext = context;
@@ -422,11 +477,18 @@ namespace Oddmatics.RozWorld.Server
             CurrentLogContext = LoggingContext.PLUGIN;
         }
 
+        /// <summary>
+        /// Writes the default server configuration file to the disk.
+        /// </summary>
+        /// <param name="targetFile">The target filename to write to.</param>
         private void MakeDefaultConfigs(string targetFile)
         {
             FileSystem.PutTextFile(targetFile, new string[] { Properties.Resources.DefaultConfigs });
         }
 
+        /// <summary>
+        /// Implementation of IRwServer.RegisterCommand.
+        /// </summary>
         public bool RegisterCommand(string cmd, CommandSentCallback func, string description, string usage)
         {
             if (HasStarted)
@@ -446,6 +508,9 @@ namespace Oddmatics.RozWorld.Server
             return false;
         }
 
+        /// <summary>
+        /// Implementation of ICommandCaller.ReleaseChatHook.
+        /// </summary>
         public bool ReleaseChatHook(int token)
         {
             if (ChatHooked && token == ChatHookToken)
@@ -458,11 +523,17 @@ namespace Oddmatics.RozWorld.Server
             return false;
         }
 
+        /// <summary>
+        /// Restarts this server instance.
+        /// </summary>
         public void Restart()
         {
             // Restart here
         }
 
+        /// <summary>
+        /// Implementation of IRwServer.Save.
+        /// </summary>
         public void Save()
         {
             // Save players
@@ -477,6 +548,12 @@ namespace Oddmatics.RozWorld.Server
             // TODO: Save worlds here and anything else that needs saving
         }
 
+        /// <summary>
+        /// Issues a command to the server as a specified ICommandCaller.
+        /// </summary>
+        /// <param name="sender">The sender of this command.</param>
+        /// <param name="cmd">The command to issue.</param>
+        /// <returns>True if the command was successfully issued.</returns>
         public bool SendCommand(ICommandCaller sender, string cmd)
         {
             try
@@ -515,17 +592,26 @@ namespace Oddmatics.RozWorld.Server
             }
         }
 
+        /// <summary>
+        /// Implements ICommandCaller.SendMessage.
+        /// </summary>
         public void SendMessage(string message)
         {
             LogWithContext(LoggingContext.CHAT, message);
         }
 
+        /// <summary>
+        /// Starts this server instance.
+        /// </summary>
         public void Start()
         {
             StartupInitial();
             StartupFinal();
         }
 
+        /// <summary>
+        /// Performs initial startup functions - up to the plugin verification.
+        /// </summary>
         private void StartupInitial()
         {
             // A logger must be set and this should be set as the current server in RwCore
@@ -673,6 +759,9 @@ namespace Oddmatics.RozWorld.Server
             LoadConfigs(FILE_CONFIG);
         }
 
+        /// <summary>
+        /// Performs final startup initialisation - from loading plugins to starting the game time.
+        /// </summary>
         private void StartupFinal()
         {
             LogWithContext(LoggingContext.STATUS, "Loading plugins...");
@@ -772,6 +861,9 @@ namespace Oddmatics.RozWorld.Server
             HasStarted = true;
         }
 
+        /// <summary>
+        /// Stops this server instance.
+        /// </summary>
         public void Stop()
         {
             // TODO: Finish this!
@@ -808,6 +900,9 @@ namespace Oddmatics.RozWorld.Server
             HasStarted = false;
         }
 
+        /// <summary>
+        /// Implementation of IRwServer.ThrowFatalError.
+        /// </summary>
         public void ThrowFatalError(string message)
         {
             LogWithContext(LoggingContext.FATAL_ERROR, "A fatal error has been thrown, the server will now shut down.");
@@ -817,6 +912,9 @@ namespace Oddmatics.RozWorld.Server
             Stop();
         }
 
+        /// <summary>
+        /// Implementation of IRwServer.WorldAvailable.
+        /// </summary>
         public bool WorldAvailable(string name)
         {
             return false; // TODO: code this
