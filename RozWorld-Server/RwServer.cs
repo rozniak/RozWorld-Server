@@ -921,6 +921,9 @@ namespace Oddmatics.RozWorld.Server
         }
 
 
+        /// <summary>
+        /// [Event] GameTimer timer ticked.
+        /// </summary>
         private void GameTime_Elapsed(object sender, ElapsedEventArgs e)
         {
             // TODO: process game updates here
@@ -939,6 +942,9 @@ namespace Oddmatics.RozWorld.Server
                 Tick(this, new ServerTickEventArgs(TickRate));
         }
 
+        /// <summary>
+        /// [Event] UDP Server received a player chat message.
+        /// </summary>
         private void UdpServer_ChatMessageReceived(object sender, PacketEventArgs e)
         {
             var chatPacket = (ChatPacket)e.Packet;
@@ -960,9 +966,7 @@ namespace Oddmatics.RozWorld.Server
                     PlayerCommanding(this, commandEventArgs);
 
                 if (!commandEventArgs.Cancel)
-                {
                     SendCommand(player, cmd);
-                }
             }
             else if (player.HasPermission("rwcore.say.self"))
             {
@@ -982,6 +986,9 @@ namespace Oddmatics.RozWorld.Server
             }
         }
 
+        /// <summary>
+        /// [Event] UDP Server dropped a remote client.
+        /// </summary>
         private void UdpServer_ClientDropped(object sender, ClientDropEventArgs e)
         {
             IList<string> usernames = e.Client.Usernames;
@@ -995,6 +1002,9 @@ namespace Oddmatics.RozWorld.Server
             }
         }
 
+        /// <summary>
+        /// [Event] UDP Server received a server information request packet.
+        /// </summary>
         private void UdpServer_InfoRequestReceived(object sender, PacketEventArgs e)
         {
             var infoPacket = (ServerInfoRequestPacket)e.Packet;
@@ -1011,6 +1021,9 @@ namespace Oddmatics.RozWorld.Server
                 BrowserName), infoPacket.SenderEndPoint);
         }
 
+        /// <summary>
+        /// [Event] UDP Server received a log in request.
+        /// </summary>
         private void UdpServer_LogInRequestReceived(object sender, PacketEventArgs e)
         {
             var logInPacket = (LogInRequestPacket)e.Packet;
@@ -1075,6 +1088,9 @@ namespace Oddmatics.RozWorld.Server
                 result), logInPacket.SenderEndPoint);
         }
 
+        /// <summary>
+        /// [Event] UDP Server received a sign up request.
+        /// </summary>
         private void UdpServer_SignUpRequestReceived(object sender, PacketEventArgs e)
         {
             var signUpPacket = (SignUpRequestPacket)e.Packet;
