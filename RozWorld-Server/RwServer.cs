@@ -10,6 +10,7 @@
  */
 
 using Oddmatics.RozWorld.API.Generic;
+using Oddmatics.RozWorld.API.Generic.Event;
 using Oddmatics.RozWorld.API.Generic.Game;
 using Oddmatics.RozWorld.API.Server;
 using Oddmatics.RozWorld.API.Server.Accounts;
@@ -73,22 +74,27 @@ namespace Oddmatics.RozWorld.Server
         /// <summary>
         /// The text file containing banned account names.
         /// </summary>
-        public static string FILE_ACCOUNT_BANS = Directory.GetCurrentDirectory() + "\\namebans.txt";
+        public static string FILE_ACCOUNT_BANS = Directory.GetCurrentDirectory() + @"\namebans.txt";
 
         /// <summary>
         /// The text file containing whitelisted account names.
         /// </summary>
-        public static string FILE_ACCOUNT_WHITELIST = Directory.GetCurrentDirectory() + "\\whitelist.txt";
+        public static string FILE_ACCOUNT_WHITELIST = Directory.GetCurrentDirectory() + @"\whitelist.txt";
+
+        /// <summary>
+        /// The text file containing trusted plugins.
+        /// </summary>
+        public static string FILE_TRUSTED_PLUGINS = Directory.GetCurrentDirectory() + @"\trustedplugins.txt";
         
         /// <summary>
         /// The config file for server variables.
         /// </summary>
-        public static string FILE_CONFIG = Directory.GetCurrentDirectory() + "\\server.cfg";
+        public static string FILE_CONFIG = Directory.GetCurrentDirectory() + @"\server.cfg";
 
         /// <summary>
         /// The text file containing banned ips.
         /// </summary>
-        public static string FILE_IP_BANS = Directory.GetCurrentDirectory() + "\\ipbans.txt";
+        public static string FILE_IP_BANS = Directory.GetCurrentDirectory() + @"\ipbans.txt";
 
         /// <summary>
         /// The special argument trigger to pass 'default' options to a function.
@@ -115,7 +121,7 @@ namespace Oddmatics.RozWorld.Server
         public bool IsPaused { get; private set; }
         public bool IsWhitelisted { get; private set; }
         private ILogger _Logger;
-        public ILogger Logger { get { return _Logger; } set { _Logger = _Logger == null ? value : _Logger; } }
+        public ILogger Logger { get { return _Logger; } set { if (_Logger == null) _Logger = value; } }
         public short MaxPlayers { get; private set; }
         public IList<Player> OnlinePlayers
         {
@@ -172,6 +178,8 @@ namespace Oddmatics.RozWorld.Server
         private long SinceLastAutosave = 0;
         private string SpawnWorldGenerator = String.Empty;
         private string SpawnWorldGeneratorOptions = String.Empty;
+        private TrustedPluginCheckCallback _TrustedPluginCheck;
+        public TrustedPluginCheckCallback TrustedPluginCheck { get { return _TrustedPluginCheck; } set { if(_TrustedPluginCheck == null) _TrustedPluginCheck = value; } }
         private RwUdpServer UdpServer;
         public SessionInfo UdpSessionInfo { get { return UdpServer.SessionInfo; } }
 
@@ -360,7 +368,7 @@ namespace Oddmatics.RozWorld.Server
         }
 
         /// <summary>
-        /// [ADD TO API] Implementation of IRwServer.Kick.
+        /// Implementation of IRwServer.Kick.
         /// </summary>
         public bool Kick(Player player, string reason = "")
         {
@@ -605,21 +613,15 @@ namespace Oddmatics.RozWorld.Server
         /// </summary>
         public void Start()
         {
-            StartupInitial();
-            StartupFinal();
-        }
-
-        /// <summary>
-        /// Performs initial startup functions - up to the plugin verification.
-        /// </summary>
-        private void StartupInitial()
-        {
             // A logger must be set and this should be set as the current server in RwCore
             if (RwCore.Server != this)
                 throw new InvalidOperationException("RwServer.Start: RwCore.Server must reference this server instance before calling Start().");
 
             if (Logger == null)
                 throw new InvalidOperationException("RwServer.Start: An ILogger instance must be attached before calling Start().");
+
+            if (TrustedPluginCheck == null)
+                throw new InvalidOperationException("RwServer.Start: A TrustedPluginCheckCallback delegate must be attached before calling Start().");
 
             if (HasStarted)
                 throw new InvalidOperationException("RwServer.Start: Server is already started.");
@@ -757,21 +759,38 @@ namespace Oddmatics.RozWorld.Server
 
             LoadConfigs(SPECIAL_ARG_DEFAULT); // Load defaults first!
             LoadConfigs(FILE_CONFIG);
-        }
 
-        /// <summary>
-        /// Performs final startup initialisation - from loading plugins to starting the game time.
-        /// </summary>
-        private void StartupFinal()
-        {
             LogWithContext(LoggingContext.STATUS, "Loading plugins...");
 
             _Plugins = new List<IPlugin>();
 
-            // Load plugins here
-            var pluginClasses = new List<Type>();
+            LogWithContext(LoggingContext.STATUS, "Detecting plugin files...");
+
+            // Load trusted plugins
+            IList<string> allowedPluginFiles = File.Exists(FILE_TRUSTED_PLUGINS) ?
+                FileSystem.GetTextFile(FILE_TRUSTED_PLUGINS) :
+                new List<string>();
+
+            List<string> pluginFilesToLoad = new List<string>();
 
             foreach (string file in Directory.GetFiles(DIRECTORY_PLUGINS, "*.dll"))
+            {
+                if (allowedPluginFiles.Contains(file))
+                    pluginFilesToLoad.Add(file);
+                else
+                {
+                    if (TrustedPluginCheck(file))
+                        pluginFilesToLoad.Add(file);
+                }
+            }
+
+            // Save the trusted plugins to disk
+            FileSystem.PutTextFile(FILE_TRUSTED_PLUGINS, pluginFilesToLoad.ToArray());
+
+            // Now load the plugins
+            var pluginClasses = new List<Type>();
+
+            foreach (string file in pluginFilesToLoad)
             {
                 try
                 {
