@@ -779,6 +779,8 @@ namespace Oddmatics.RozWorld.Server
                     pluginFilesToLoad.Add(file);
                 else
                 {
+                    LogWithContext(LoggingContext.STATUS, "Checking trust for " + file);
+
                     if (TrustedPluginCheck(file))
                         pluginFilesToLoad.Add(file);
                 }
