@@ -171,7 +171,6 @@ namespace Oddmatics.RozWorld.Server
         private Timer GameTime;
         public bool HasStarted { get; private set; }
         private Dictionary<string, Command> InstalledCommands;
-        public string CurrentLogContext { get; private set; }
         private Dictionary<string, RwPlayer> OnlineBotPlayers;
         private Dictionary<string, RwPlayer> OnlineRealPlayers;
         public Random Random { get; private set; }
@@ -192,7 +191,7 @@ namespace Oddmatics.RozWorld.Server
         {
             if (HasStarted)
             {
-                Logger.Out("[CHAT] " + message);
+                Logger.Out("[CHAT] " + message, LogLevel.Info);
 
                 foreach (Player player in OnlinePlayers)
                 {
@@ -214,7 +213,7 @@ namespace Oddmatics.RozWorld.Server
             if (message.StartsWith("/") && message.Length > 1)
                 return SendCommand(this, message.Substring(1));
             else
-                LogWithContext(LoggingContext.ERROR, "Unknown command.");
+                Logger.Out("[CMD] Unknown command.", LogLevel.Error);
 
             return false;
         }
@@ -470,19 +469,9 @@ namespace Oddmatics.RozWorld.Server
                         // TODO: as above
                         break;
 
-                    default: Logger.Out("Unknown var: \"" + item.Key + "\"."); continue;
+                    default: Logger.Out("Unknown var: \"" + item.Key + "\".", LogLevel.Error); continue;
                 }
             }
-        }
-
-        /// <summary>
-        /// [TO BE REPLACED] Logs a message with the specified context.
-        /// </summary>
-        public void LogWithContext(string context, string message, bool colours = true)
-        {
-            CurrentLogContext = context;
-            Logger.Out(message, colours);
-            CurrentLogContext = LoggingContext.PLUGIN;
         }
 
         /// <summary>
@@ -566,8 +555,8 @@ namespace Oddmatics.RozWorld.Server
         {
             try
             {
-                LogWithContext(LoggingContext.COMMAND, sender.DisplayName + " issued command: /" + cmd,
-                    false);
+                Logger.Out("[CMD] " + sender.DisplayName + " issued command: /" + cmd,
+                    LogLevel.Info, false);
 
                 var args = new List<string>();
                 string[] cmdSplit = cmd.Split();
@@ -586,7 +575,7 @@ namespace Oddmatics.RozWorld.Server
                     InstalledCommands[realCmd].Delegate(sender, args.AsReadOnly());
                 else
                 {
-                    LogWithContext(LoggingContext.ERROR, "Unknown command.");
+                    Logger.Out("[CMD] Unknown command.", LogLevel.Error);
                     return false;
                 }
 
@@ -594,8 +583,8 @@ namespace Oddmatics.RozWorld.Server
             }
             catch (Exception ex)
             {
-                LogWithContext(LoggingContext.ERROR, "An internal error occurred whilst running the issued command: " +
-                    ex.Message + ";\n" + ex.StackTrace);
+                Logger.Out("[CMD] An internal error occurred whilst running the issued command: " +
+                    ex.Message + ";\n" + ex.StackTrace, LogLevel.Error);
                 return false;
             }
         }
@@ -605,7 +594,7 @@ namespace Oddmatics.RozWorld.Server
         /// </summary>
         public void SendMessage(string message)
         {
-            LogWithContext(LoggingContext.CHAT, message);
+            Logger.Out("[CHAT] " + message, LogLevel.Info);
         }
 
         /// <summary>
@@ -626,8 +615,8 @@ namespace Oddmatics.RozWorld.Server
             if (HasStarted)
                 throw new InvalidOperationException("RwServer.Start: Server is already started.");
 
-            LogWithContext(LoggingContext.STATUS, "RozWorld server starting...");
-            LogWithContext(LoggingContext.STATUS, "Initialising directories...");
+            Logger.Out("RozWorld server starting...", LogLevel.Info);
+            Logger.Out("Initialising directories...", LogLevel.Info);
 
             FileSystem.MakeDirectory(DIRECTORY_ACCOUNTS);
             FileSystem.MakeDirectory(DIRECTORY_LEVEL);
@@ -699,7 +688,7 @@ namespace Oddmatics.RozWorld.Server
                 }
             }
 
-            LogWithContext(LoggingContext.STATUS, "Initialising systems...");
+            Logger.Out("Initialising systems...", LogLevel.Info);
 
             Random = new Random();
             AccountNameFromDisplay = new Dictionary<string, string>();
@@ -722,7 +711,7 @@ namespace Oddmatics.RozWorld.Server
 
             if (permAuth.DefaultGroup == null)
             {
-                LogWithContext(LoggingContext.ERROR, "No default group set, attempting to create a new default group.");
+                Logger.Out("No default group set, attempting to create a new default group.", LogLevel.Warning);
 
                 IPermissionGroup group = permAuth.CreateNewGroup("default");
 
@@ -740,7 +729,7 @@ namespace Oddmatics.RozWorld.Server
                 }
                 else
                 {
-                    LogWithContext(LoggingContext.FATAL_ERROR, "Failed to load/create default group - cannot proceed.");
+                    Logger.Out("Failed to load/create default group - cannot proceed.", LogLevel.Fatal);
 
                     if (FatalError != null)
                         FatalError(this, EventArgs.Empty);
@@ -751,8 +740,7 @@ namespace Oddmatics.RozWorld.Server
 
 
             // Settings and plugins
-
-            LogWithContext(LoggingContext.STATUS, "Setting configs...");
+            Logger.Out("Setting configs...", LogLevel.Info);
 
             if (!File.Exists(FILE_CONFIG))
                 MakeDefaultConfigs(FILE_CONFIG);
@@ -760,11 +748,11 @@ namespace Oddmatics.RozWorld.Server
             LoadConfigs(SPECIAL_ARG_DEFAULT); // Load defaults first!
             LoadConfigs(FILE_CONFIG);
 
-            LogWithContext(LoggingContext.STATUS, "Loading plugins...");
+            Logger.Out("Loading plugins...", LogLevel.Info);
 
             _Plugins = new List<IPlugin>();
 
-            LogWithContext(LoggingContext.STATUS, "Detecting plugin files...");
+            Logger.Out("Detecting plugin files...", LogLevel.Info);
 
             // Load trusted plugins
             IList<string> allowedPluginFiles = File.Exists(FILE_TRUSTED_PLUGINS) ?
@@ -779,7 +767,7 @@ namespace Oddmatics.RozWorld.Server
                     pluginFilesToLoad.Add(file);
                 else
                 {
-                    LogWithContext(LoggingContext.STATUS, "Checking trust for " + file);
+                    Logger.Out("Checking trust for " + file, LogLevel.Info);
 
                     if (TrustedPluginCheck(file))
                         pluginFilesToLoad.Add(file);
@@ -807,15 +795,15 @@ namespace Oddmatics.RozWorld.Server
                 }
                 catch (ReflectionTypeLoadException reflectionEx)
                 {
-                    LogWithContext(LoggingContext.ERROR, "An error occurred trying to enumerate the types inside of the plugin \""
+                    Logger.Out("An error occurred trying to enumerate the types inside of the plugin \""
                         + Path.GetFileName(file) + "\", this plugin cannot be loaded. It may have been built for" +
-                        " a different version of the RozWorld API.");
+                        " a different version of the RozWorld API.", LogLevel.Error);
                 }
                 catch (Exception ex)
                 {
-                    LogWithContext(LoggingContext.ERROR, "An error occurred trying to load plugin \"" + Path.GetFileName(file) + "\", this " +
+                    Logger.Out("An error occurred trying to load plugin \"" + Path.GetFileName(file) + "\", this " +
                         "plugin cannot be loaded. The exception that occurred reported the following:\n" +
-                        ex.Message + "\nStack:\n" + ex.StackTrace);
+                        ex.Message + "\nStack:\n" + ex.StackTrace, LogLevel.Error);
                 }
             }
 
@@ -835,13 +823,13 @@ namespace Oddmatics.RozWorld.Server
 
             // Done loading plugins
 
-            LogWithContext(LoggingContext.STATUS, "Finished loading plugins!");
+            Logger.Out("Finished loading plugins!", LogLevel.Info);
 
             GameTime.Start(); // Start game timer
 
             // Load worlds here
 
-            LogWithContext(LoggingContext.STATUS, "Starting listener on UDP port " + HostingPort.ToString() + "...");
+            Logger.Out("Starting listener on UDP port " + HostingPort.ToString() + "...", LogLevel.Info);
 
             try
             {
@@ -855,7 +843,7 @@ namespace Oddmatics.RozWorld.Server
             }
             catch (SocketException socketEx)
             {
-                LogWithContext(LoggingContext.ERROR, "Failed to start listener - port unavailable.");
+                Logger.Out("Failed to start listener - port unavailable.", LogLevel.Fatal);
 
                 if (FatalError != null)
                     FatalError(this, EventArgs.Empty);
@@ -864,7 +852,8 @@ namespace Oddmatics.RozWorld.Server
             }
             catch (Exception ex)
             {
-                LogWithContext(LoggingContext.ERROR, "Failed to start listener - Exception:\n" + ex.Message + "\nStack:\n" + ex.StackTrace);
+                Logger.Out("Failed to start listener - Exception:\n" + ex.Message + "\nStack:\n" + ex.StackTrace,
+                    LogLevel.Fatal);
 
                 if (FatalError != null)
                     FatalError(this, EventArgs.Empty);
@@ -872,12 +861,12 @@ namespace Oddmatics.RozWorld.Server
                 return;
             }
 
-            LogWithContext(LoggingContext.STATUS, "Server done loading!");
+            Logger.Out("Server done loading!", LogLevel.Info);
 
             if (Started != null)
                 Started(this, EventArgs.Empty);
 
-            LogWithContext(LoggingContext.STATUS, "Hello! This is " + ServerName + " (version " + ServerVersion + ").");
+            Logger.Out("Hello! This is " + ServerName + " (version " + ServerVersion + ").", LogLevel.Info);
 
             HasStarted = true;
         }
@@ -889,12 +878,12 @@ namespace Oddmatics.RozWorld.Server
         {
             // TODO: Finish this!
 
-            LogWithContext(LoggingContext.STATUS, "Server stopping...");
-            LogWithContext(LoggingContext.STATUS, "Disconnecting clients...");
+            Logger.Out("Server stopping...", LogLevel.Info);
+            Logger.Out("Disconnecting clients...", LogLevel.Info);
 
             // TODO: Send disconnect packets here
 
-            LogWithContext(LoggingContext.STATUS, "Detaching listener...");
+            Logger.Out("Detaching listener...", LogLevel.Info);
 
             UdpServer.ChatMessageReceived -= UdpServer_ChatMessageReceived;
             UdpServer.ClientDropped -= UdpServer_ClientDropped;
@@ -904,14 +893,14 @@ namespace Oddmatics.RozWorld.Server
 
             // Stop RwUdpServer here
 
-            LogWithContext(LoggingContext.STATUS, "Stopping plugins...");
+            Logger.Out("Stopping plugins...", LogLevel.Info);
 
             if (Stopping != null)
                 Stopping(this, EventArgs.Empty);
 
             GameTime.Stop(); // Stop game timer
 
-            LogWithContext(LoggingContext.STATUS, "Saving server data...");
+            Logger.Out("Saving server data...", LogLevel.Info);
 
             Save();
 
@@ -926,9 +915,10 @@ namespace Oddmatics.RozWorld.Server
         /// </summary>
         public void ThrowFatalError(string message)
         {
-            LogWithContext(LoggingContext.FATAL_ERROR, "A fatal error has been thrown, the server will now shut down.");
-            LogWithContext(LoggingContext.FATAL_MESSAGE, "Message reported: " + message);
-            Logger.Out("------");
+            Logger.Out("------", LogLevel.Fatal);
+            Logger.Out("A fatal error has been thrown, the server will now shut down.", LogLevel.Fatal);
+            Logger.Out("Message reported: " + message, LogLevel.Fatal);
+            Logger.Out("------", LogLevel.Fatal);
 
             Stop();
         }
@@ -1017,8 +1007,8 @@ namespace Oddmatics.RozWorld.Server
             foreach (string user in usernames)
             {
                 Player player = GetPlayerByUsername(user);
-                LogWithContext(LoggingContext.STATUS_DISCONNECT , player.DisplayName + " (" + player.Account.Username +
-                    ") has been disconnected (client timeout).");
+                Logger.Out("[DISC] " + player.DisplayName + " (" + player.Account.Username +
+                    ") has been disconnected (client timeout).", LogLevel.Info);
                 DropPlayer(player);
             }
         }
@@ -1030,7 +1020,8 @@ namespace Oddmatics.RozWorld.Server
         {
             var infoPacket = (ServerInfoRequestPacket)e.Packet;
 
-            LogWithContext(LoggingContext.UDP, "Server info request received by " + infoPacket.SenderEndPoint.ToString());
+            Logger.Out("[UDP] Server info request received by " + infoPacket.SenderEndPoint.ToString(),
+                LogLevel.Info);
 
             // Client is compatible if the server implemention matches and either the client isn't vanilla or if it is
             // vanilla, it must be the compatible version
@@ -1051,7 +1042,8 @@ namespace Oddmatics.RozWorld.Server
             string realUsername = logInPacket.Username.ToLower();
             byte result = ErrorMessage.INTERNAL_ERROR; // Default to generic error, on success this will be replaced
 
-            LogWithContext(LoggingContext.UDP, "Log in request received by " + logInPacket.SenderEndPoint.ToString());
+            Logger.Out("[UDP] Log in request received by " + logInPacket.SenderEndPoint.ToString(),
+                LogLevel.Info);
 
             // Check bans and whitelist status
             if (BannedIPs.Contains(logInPacket.SenderEndPoint.Address) ||
@@ -1087,14 +1079,14 @@ namespace Oddmatics.RozWorld.Server
                             if (PlayerLogIn != null)
                                 PlayerLogIn(this, new PlayerLogInEventArgs(player));
 
-                            LogWithContext(LoggingContext.STATUS_LOGIN, "Player '" + logInPacket.Username + "' has logged on! " +
-                                "(from " + logInPacket.SenderEndPoint.ToString() + ")");
+                            Logger.Out("[LOGIN] Player '" + logInPacket.Username + "' has logged on! " +
+                                "(from " + logInPacket.SenderEndPoint.ToString() + ")", LogLevel.Info);
                         }
                         else
                         {
                             // Something odd happened
-                            LogWithContext(LoggingContext.ERROR, "Something strange occurred during log in, " +
-                                "connected client instance could not be instated.");
+                            Logger.Out("[LOGIN] Something strange occurred during log in, connected client" +
+                                " instance could not be instated.", LogLevel.Error);
                             result = ErrorMessage.INTERNAL_ERROR; // Update error message since it was a failure
                         }
                     }
@@ -1118,7 +1110,8 @@ namespace Oddmatics.RozWorld.Server
             string realUsername = signUpPacket.Username.ToLower();
             byte result;
 
-            LogWithContext(LoggingContext.UDP, "Sign up request received by " + signUpPacket.SenderEndPoint.ToString());
+            Logger.Out("[UDP] Sign up request received by " + signUpPacket.SenderEndPoint.ToString(),
+                LogLevel.Info);
 
             // Check bans
             if (BannedIPs.Contains(signUpPacket.SenderEndPoint.Address) ||
@@ -1136,13 +1129,12 @@ namespace Oddmatics.RozWorld.Server
                     AccountSignUp(this, new AccountSignUpEventArgs(signUpPacket.SenderEndPoint.Address,
                         signUpPacket.Username));
 
-                LogWithContext(LoggingContext.STATUS, "Account sign up complete for username '" +
-                    signUpPacket.Username + "' from " + signUpPacket.SenderEndPoint.ToString() + ".");
+                Logger.Out("[SIGN] Account sign up complete for username '" + signUpPacket.Username + "' from " +
+                    signUpPacket.SenderEndPoint.ToString() + ".", LogLevel.Info);
             }
             else
-                LogWithContext(LoggingContext.STATUS, "Account sign up unsuccessful for username '"
-                    + signUpPacket.Username + "' from " + signUpPacket.SenderEndPoint.ToString() +
-                    " - Error " + result.ToString() + ".");
+                Logger.Out("[SIGN] Account sign up unsuccessful for username '" + signUpPacket.Username + "' from " +
+                    signUpPacket.SenderEndPoint.ToString() + " - Error " + result.ToString() + ".", LogLevel.Error);
 
             UdpServer.Send(new SignUpResponsePacket(result == ErrorMessage.NO_ERROR, signUpPacket.Username, result),
                 signUpPacket.SenderEndPoint);

@@ -130,8 +130,8 @@ namespace Oddmatics.RozWorld.Server.Accounts
 
                     if (GroupRegistry.ContainsKey(realName))
                     {
-                        server.LogWithContext(LoggingContext.WARNING, "PermissionAuthority: Duplicate group entry for '"
-                            + file.Name + "'.");
+                        server.Logger.Out("PermissionAuthority: Duplicate group entry for '" + file.Name + "'.",
+                            LogLevel.Warning);
                         GroupRegistry.Remove(realName);
                     }
 
@@ -143,10 +143,10 @@ namespace Oddmatics.RozWorld.Server.Accounts
                 }
                 catch (Exception ex)
                 {
-                    server.LogWithContext(LoggingContext.ERROR,
-                        "PermissionAuthority: Failed to load '" +filename + "'.");
-                    server.Logger.Out(ex.Message);
-                    server.Logger.Out(ex.StackTrace);
+                    server.Logger.Out("PermissionAuthority: Failed to load '" +filename + "'.",
+                        LogLevel.Error);
+                    server.Logger.Out(ex.Message, LogLevel.Error);
+                    server.Logger.Out(ex.StackTrace, LogLevel.Error);
                 }
             }
 

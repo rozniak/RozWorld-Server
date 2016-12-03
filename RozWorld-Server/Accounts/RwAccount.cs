@@ -82,16 +82,15 @@ namespace Oddmatics.RozWorld.Server.Accounts
                         catch (Exception ex)
                         {
                             // Some error, log it and do not continue the changes
-                            server.LogWithContext(LoggingContext.ERROR,
-                                "Problem whilst changing display name for user '" +
-                                Username + "', exception: " + ex.Message);
-                            server.LogWithContext(LoggingContext.ERROR,
-                                "Stack trace: " + ex.StackTrace);
+                            server.Logger.Out("Problem whilst changing display name for user '" + Username +
+                                "', exception: " + ex.Message, LogLevel.Error);
+
+                            server.Logger.Out("Stack trace: " + ex.StackTrace,LogLevel.Error);
                         }
                     }
                     else
-                        server.LogWithContext(LoggingContext.ERROR, "Failed to set new display name for user '"
-                            + Username + "': name value is already in use!");
+                        server.Logger.Out("Failed to set new display name for user '" + Username +
+                            "': name value is already in use!", LogLevel.Error);
                 }
             }
         }
@@ -176,8 +175,9 @@ namespace Oddmatics.RozWorld.Server.Accounts
                 var permFile = PlayerPermissionFile.FromFile(permFiles[0]);
 
                 if (!permFile.Name.EqualsIgnoreCase(Username)) // Check for name mismatch
-                    server.LogWithContext(LoggingContext.WARNING, 
-                        "Permission file for " + Username + ", 'name' value mismatch. This may or may not be intended.");
+                    server.Logger.Out("Permission file for " + Username +
+                        ", 'name' value mismatch. This may or may not be intended.",
+                        LogLevel.Warning);
 
                 ChatPrefix = permFile.Prefix;
                 ChatSuffix = permFile.Suffix;
@@ -284,8 +284,8 @@ namespace Oddmatics.RozWorld.Server.Accounts
             }
             catch (Exception ex)
             {
-                ((RwServer)RwCore.Server).LogWithContext(LoggingContext.ERROR,
-                    "Unable to save account '" + Username + "'. Exception: " + ex.Message);
+                ((RwServer)RwCore.Server).Logger.Out("Unable to save account '" + Username +
+                    "'. Exception: " + ex.Message, LogLevel.Error);
             }
         }
 
