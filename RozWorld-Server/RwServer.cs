@@ -391,12 +391,10 @@ namespace Oddmatics.RozWorld.Server
         /// <summary>
         /// Loads a server configuration from a file on disk.
         /// </summary>
-        /// <param name="configFile">The filename to load from.</param>
-        private void LoadConfigs(string configFile)
+        /// <param name="file">The configuration file to load from.</param>
+        private void LoadConfigs(IList<string> file)
         {
-            var configs = configFile == SPECIAL_ARG_DEFAULT ?
-                FileSystem.ReadINIToDictionary(Resources.DefaultConfigs.Split('\n')) :
-                FileSystem.ReadINIToDictionary(configFile);
+            var configs = FileSystem.ReadINIToDictionary(file);
 
             foreach (var item in configs)
             {
@@ -745,8 +743,8 @@ namespace Oddmatics.RozWorld.Server
             if (!File.Exists(FILE_CONFIG))
                 MakeDefaultConfigs(FILE_CONFIG);
 
-            LoadConfigs(SPECIAL_ARG_DEFAULT); // Load defaults first!
-            LoadConfigs(FILE_CONFIG);
+            LoadConfigs(Properties.Resources.DefaultConfigs.Split('\n')); // Load defaults first!
+            LoadConfigs(FileSystem.GetTextFile(FILE_CONFIG));
 
             Logger.Out("Loading plugins...", LogLevel.Info);
 
