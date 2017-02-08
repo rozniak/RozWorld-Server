@@ -601,6 +601,9 @@ namespace Oddmatics.RozWorld.Server
         public void Start()
         {
             // A logger must be set and this should be set as the current server in RwCore
+            if (RwCore.InstanceType != RwInstanceType.ServerOnly && RwCore.InstanceType != RwInstanceType.Both)
+                throw new InvalidOperationException("RwServer.Start: This RozWorld instance is not a server.");
+
             if (RwCore.Server != this)
                 throw new InvalidOperationException("RwServer.Start: RwCore.Server must reference this server instance before calling Start().");
 
