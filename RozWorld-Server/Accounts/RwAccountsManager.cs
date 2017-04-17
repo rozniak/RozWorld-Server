@@ -9,33 +9,67 @@
  * Sharing, editing and general licence term information can be found inside of the "LICENCE.MD" file that should be located in the root of this project's directory structure.
  */
 
+using LiteDB;
 using Oddmatics.RozWorld.API.Server.Entities;
 using Oddmatics.RozWorld.API.Generic;
 using Oddmatics.RozWorld.API.Server.Accounts;
 using Oddmatics.RozWorld.Formats;
 using Oddmatics.RozWorld.Net.Packets;
 using Oddmatics.RozWorld.Server.Entities;
-using Oddmatics.Util.IO;
 using System;
-using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net;
 
 namespace Oddmatics.RozWorld.Server.Accounts
 {
     public sealed class RwAccountsManager : IAccountsManager
     {
-        public int AccountCount { get { return Directory.GetFiles(RwServer.DIRECTORY_ACCOUNTS, "*.*.acc").Length; } }
+        public const string ACCOUNT_DB_FILENAME = @"accounts.db";
 
 
-        public byte CreateAccount(string name, byte[] passwordHash, IPAddress creatorIP)
+        public int AccountCount { get { return AccountTable.Count(); } }
+
+
+        private readonly LiteDatabase AccountDatabase;
+        private readonly LiteCollection<AccountRecord> AccountTable;
+
+
+        public RwAccountsManager()
         {
+            AccountDatabase = new LiteDatabase(Environment.CurrentDirectory + "\\" + ACCOUNT_DB_FILENAME);
+            AccountTable = AccountDatabase.GetCollection<AccountRecord>("Accounts");
+
+            // Ensure indexing is on for required fields
+            AccountTable.EnsureIndex(x => x.DisplayName);
+            AccountTable.EnsureIndex(x => x.Username);
+        }
+
+
+        public byte CreateAccount(string name, byte[] passwordHash, IPAddress creationIP)
+        {
+            // Ensure username is valid
             if (!RwPlayer.ValidName(name))
                 return ErrorMessage.ACCOUNT_NAME_INVALID;
 
-            if (AccountFile.Create(name, passwordHash, creatorIP,
-                RwServer.DIRECTORY_ACCOUNTS) == null)
+            // Ensure username is not already in use
+            if (AccountTable.Find(x => x.Username.ToLower() == name.ToLower()).Any())
                 return ErrorMessage.ACCOUNT_NAME_TAKEN;
+
+            // TODO: Add a check, if disallow duplicate display names is enabled, append randomly generated number on the end of their username
+
+            // Create and insert the account record into the table
+
+            var record = new AccountRecord
+            {
+                CreationDate = DateTime.UtcNow,
+                CreationIP = creationIP,
+                DisplayName = name, // Refer to TODO above
+                PasswordHash = passwordHash,
+                Username = name
+            };
+
+            AccountTable.Insert(record);
 
             return ErrorMessage.NO_ERROR;
         }

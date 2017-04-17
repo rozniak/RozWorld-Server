@@ -31,6 +31,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="LiteDB">
+      <HintPath>Libraries\LiteDB.dll</HintPath>
+    </Reference>
     <Reference Include="Oddmatics.RozWorld.API, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\RozWorld-API\RozWorld-API\bin\Debug\Oddmatics.RozWorld.API.dll</HintPath>
@@ -41,8 +44,8 @@
     <Reference Include="Oddmatics.RozWorld.Net">
       <HintPath>..\..\RozWorld-Net\RozWorld-Net\bin\Debug\Oddmatics.RozWorld.Net.dll</HintPath>
     </Reference>
-    <Reference Include="Oddmatics.Util.IO">
-      <HintPath>..\..\Oddmatics-IO\Oddmatics-IO\bin\Debug\Oddmatics.Util.IO.dll</HintPath>
+    <Reference Include="Oddmatics.Util">
+      <HintPath>..\..\Oddmatics-IO\Oddmatics-IO\bin\Release\Oddmatics.Util.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />

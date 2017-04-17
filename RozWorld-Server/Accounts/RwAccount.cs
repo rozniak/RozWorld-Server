@@ -141,7 +141,7 @@ namespace Oddmatics.RozWorld.Server.Accounts
         }
 
 
-        private AccountFile AccountFile;
+        private AccountRecord AccountFile;
         private bool Exists;
         public bool LoggedIn { get; private set; }
         private Dictionary<string, PermissionState> PermissionStates;
