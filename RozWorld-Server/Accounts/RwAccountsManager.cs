@@ -76,18 +76,20 @@ namespace Oddmatics.RozWorld.Server.Accounts
 
         public bool DeleteAccount(string name)
         {
+            // TODO: Change this to a HRESULT equivilent
+
+            // TODO: Test this
+
+
             // If a player is logged into this account, do not proceed
             if (RwCore.Server.GetPlayerByUsername(name) != null)
                 return false;
 
-            // Remove any and all account matches
-            string[] accountsFound = Directory.GetFiles(RwServer.DIRECTORY_ACCOUNTS,
-                name.ToLower() + ".*.acc");
+            // Remove account if it exists
+            var results = AccountTable.Find(x => x.Username.ToLower() == name.ToLower());
 
-            foreach (string file in accountsFound)
-            {
-                File.Delete(file);
-            }
+            if (results.Any())
+                AccountTable.Delete(results.ToArray()[0].Id);            
 
             return true;
         }
