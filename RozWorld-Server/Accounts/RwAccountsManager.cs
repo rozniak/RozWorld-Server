@@ -117,6 +117,17 @@ namespace Oddmatics.RozWorld.Server.Accounts
             return null;
         }
 
+        public AccountRecord GetAccountRecord(string username)
+        {
+            string accountName = username.ToLower();
+            var results = AccountTable.Find(x => x.Username.ToLower() == accountName);
+
+            if (results.Any())
+                return results.ToArray()[0];
+
+            return null;
+        }
+
         public bool RenameAccount(IAccount account, string newName)
         {
             // If a player is logged into this account, do not proceed
@@ -148,6 +159,11 @@ namespace Oddmatics.RozWorld.Server.Accounts
             {
                 player.Account.Save();
             }
+        }
+
+        public bool UpdateAccountRecord(AccountRecord record)
+        {
+            return AccountTable.Update(record);
         }
     }
 }

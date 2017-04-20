@@ -141,7 +141,7 @@ namespace Oddmatics.RozWorld.Server.Accounts
         }
 
 
-        private AccountRecord AccountFile;
+        private AccountRecord AccountRecord;
         private bool Exists;
         public bool LoggedIn { get; private set; }
         private Dictionary<string, PermissionState> PermissionStates;
@@ -151,18 +151,18 @@ namespace Oddmatics.RozWorld.Server.Accounts
         public RwAccount(string username)
         {
             string realUsername = username.ToLower();
-            string[] accountFiles = Directory.GetFiles(RwServer.DIRECTORY_ACCOUNTS,
-                realUsername + ".*.acc");
             string[] permFiles = Directory.GetFiles(RwServer.DIRECTORY_PERMISSIONS,
                 "player-" + realUsername + ".json");
             RwServer server = (RwServer)RwCore.Server;
 
+            AccountRecord record = ((RwAccountsManager)server.AccountsManager).GetAccountRecord(username);
+
             Exists = false;
             LoggedIn = false;
 
-            if (accountFiles.Length == 1)
+            if (record != null)
             {
-                AccountFile = new AccountFile(accountFiles[0]);
+                AccountRecord = record;
 
                 if (permFiles.Length == 0)
                 {
